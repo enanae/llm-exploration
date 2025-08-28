@@ -1,5 +1,7 @@
 // Language Model Explorer - Main JavaScript
 
+import { HTMLUtils } from './utils.js';
+
 class LanguageModelExplorer {
   constructor() {
     this.currentModel = 'gpt2';
@@ -7,6 +9,9 @@ class LanguageModelExplorer {
     this.selectedToken = null;
     this.tokenizationResult = null;
     this.tokenizers = {};
+    this.embeddingsData = null;
+    this.currentStep = 'tokens';
+    this.autoPlayInterval = null;
     
     this.initialize();
   }
@@ -1122,77 +1127,67 @@ class LanguageModelExplorer {
     const maxDim = Math.min(12, embeddings[0]?.embedding?.length || 0);
     const maxTokens = Math.min(8, embeddings.length);
     
-    let matrix = `
-      <div class="dictionary-header">
-        <h5>Token → Embedding Dictionary Lookup</h5>
-        <p class="dictionary-subtitle">How tokens get converted to 768-dimensional vectors via the embedding dictionary</p>
-      </div>
-      
-      <!-- Instructional Carousel below header -->
-      <div class="instructional-carousel">
-        <div class="carousel-item active">
-          <h6>🔤 Token Input</h6>
-          <p>Each word or subword becomes a unique token ID that gets looked up in the embedding dictionary.</p>
-          <div class="token-examples">
-            <span class="token-example">"[CLS]" → ID 0</span>
-            <span class="token-example">"Hello" → ID 1</span>
-            <span class="token-example">"wor" → ID 2</span>
-          </div>
-        </div>
-        <div class="carousel-item">
-          <h6>📚 Embedding Table</h6>
-          <p>Pre-trained lookup table with ~50,000 token vectors, each 768 dimensions. Total parameters: ~38M.</p>
-          <div class="embedding-info">
-            <div class="info-item">
-              <strong>Vocabulary Size:</strong> ~50,000 tokens
-            </div>
-            <div class="info-item">
-              <strong>Embedding Dimension:</strong> 768
-            </div>
-            <div class="info-item">
-              <strong>Total Parameters:</strong> ~38M
-            </div>
-          </div>
-        </div>
-        <div class="carousel-item">
-          <h6>🔍 Vector Lookup</h6>
-          <p>Each token ID retrieves its corresponding 768D vector from the dictionary table.</p>
-          <div class="lookup-example">
-            <div class="lookup-step">
-              <span class="step-label">Input:</span>
-              <span class="step-value">Token ID 1</span>
-            </div>
-            <div class="lookup-arrow">↓</div>
-            <div class="lookup-step">
-              <span class="step-label">Output:</span>
-              <span class="step-value">[0.23, -0.45, 0.67, ...] (768D)</span>
-            </div>
-          </div>
-        </div>
-        <div class="carousel-item">
-          <h6>📊 Resulting Embeddings</h6>
-          <p>The resulting matrix shows each token's embedding vector with color-coded values.</p>
-          <div class="embedding-features">
-            <div class="feature-item">🎨 Color-coded by value</div>
-            <div class="feature-item">📏 768 dimensions per token</div>
-            <div class="feature-item">🔢 Interactive numerical display</div>
-            <div class="feature-item">📊 Vector magnitude calculation</div>
-          </div>
-        </div>
-        <div class="carousel-nav">
-          <button class="carousel-btn prev">‹</button>
-          <div class="carousel-dots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-            <span class="dot" data-index="2"></span>
-            <span class="dot" data-index="3"></span>
-          </div>
-          <button class="carousel-btn next">›</button>
-        </div>
-      </div>
-      
+    // Create carousel items using utility
+    const carouselItems = [
+      {
+        icon: '🔤',
+        title: 'Token Input',
+        description: 'Each word or subword becomes a unique token ID that gets looked up in the embedding dictionary.',
+        content: this.createTokenExamples(tokens.slice(0, 3))
+      },
+      {
+        icon: '📚',
+        title: 'Embedding Table',
+        description: 'Pre-trained lookup table with ~50,000 token vectors, each 768 dimensions. Total parameters: ~38M.',
+        content: this.createEmbeddingInfo()
+      },
+      {
+        icon: '🔍',
+        title: 'Vector Lookup',
+        description: 'Each token ID retrieves its corresponding 768D vector from the dictionary table.',
+        content: this.createLookupExample()
+      },
+      {
+        icon: '📊',
+        title: 'Resulting Embeddings',
+        description: 'The resulting matrix shows each token\'s embedding vector with color-coded values.',
+        content: this.createEmbeddingFeatures()
+      }
+    ];
+
+    const carousel = HTMLUtils.createCarousel(carouselItems);
+    
+    // Create the matrix using utility
+    const matrixData = embeddings.slice(0, maxTokens).map(embedding => 
+      embedding.embedding.slice(0, maxDim)
+    );
+    
+    const matrixOptions = {
+      title: 'Resulting 768D Vectors',
+      maxRows: maxTokens,
+      maxCols: maxDim,
+      rowLabels: embeddings.slice(0, maxTokens).map((embedding, index) => 
+        `${embedding.token} (Pos ${index})`
+      ),
+      cellRenderer: (value, rowIndex, colIndex) => {
+        const color = this.getMatrixColor(value);
+        const intensity = Math.min(Math.abs(value) * 2, 1);
+        return `<span style="background-color: ${color}; opacity: ${intensity + 0.3}; padding: 2px; border-radius: 2px; color: white; font-size: 0.6rem;">${value.toFixed(2)}</span>`;
+      }
+    };
+
+    const matrix = HTMLUtils.createMatrix(matrixData, matrixOptions);
+    
+    // Create controls using utility
+    const controls = [
+      HTMLUtils.createControlGroup('showValues', 'Show Numerical Values', 'Display the actual numbers in each embedding cell', 'checkbox', true),
+      HTMLUtils.createControlGroup('showMagnitudes', 'Show Vector Magnitudes', 'Display the length (magnitude) of each token\'s embedding vector')
+    ];
+
+    return `
+      ${HTMLUtils.createSectionHeader('Token → Embedding Dictionary Lookup', 'How tokens get converted to 768-dimensional vectors via the embedding dictionary')}
+      ${carousel}
       <div class="dictionary-visualization">
-        <!-- Input Tokens -->
         <div class="tokens-section">
           <h6>Input Tokens</h6>
           <div class="tokens-display">
@@ -1204,80 +1199,58 @@ class LanguageModelExplorer {
             `).join('')}
           </div>
         </div>
-        
-        <!-- Embeddings Matrix -->
-        <div class="embeddings-matrix">
-          <div class="matrix-header">
-            <span class="matrix-title">Resulting 768D Vectors</span>
-          </div>
-          
-          <div class="matrix-content">
-            <!-- Dimension Labels Row -->
-            <div class="dimension-labels-row">
-              <div class="label-spacer"></div>
-              ${Array.from({length: maxDim}, (_, i) => `
-                <div class="dim-label" title="Dimension ${i}">${i}</div>
-              `).join('')}
-            </div>
-            
-            <!-- Matrix Rows -->
-            <div class="matrix-rows">
-              ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => {
-                const magnitude = embedding.magnitude;
-                return `
-                  <div class="matrix-row" data-token-index="${tokenIndex}">
-                    <div class="row-label">
-                      <span class="token-name">${embedding.token}</span>
-                      <span class="token-position">Pos ${tokenIndex}</span>
-                      <span class="vector-magnitude" style="display: none;">${magnitude.toFixed(3)}</span>
-                    </div>
-                    <div class="embedding-values">
-                      ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
-                        const color = this.getMatrixColor(value);
-                        const intensity = Math.min(Math.abs(value) * 2, 1);
-                        return `
-                          <div class="embedding-cell" 
-                               data-token-index="${tokenIndex}" 
-                               data-dim-index="${dimIndex}"
-                               style="background-color: ${color}; opacity: ${intensity + 0.3}">
-                            <span class="cell-value">${value.toFixed(2)}</span>
-                            <div class="cell-tooltip">
-                              Token: ${embedding.token}<br>
-                              Position: ${tokenIndex}<br>
-                              Dimension: ${dimIndex}<br>
-                              Value: ${value.toFixed(4)}
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
+        ${matrix}
       </div>
-      
       <div class="dictionary-controls">
-        <div class="control-group">
-          <label class="control-label">
-            <input type="checkbox" id="showValues" class="control-checkbox" checked>
-            Show Numerical Values
-          </label>
-          <span class="control-description">Display the actual numbers in each embedding cell</span>
-        </div>
-        <div class="control-group">
-          <label class="control-label">
-            <input type="checkbox" id="showMagnitudes" class="control-checkbox">
-            Show Vector Magnitudes
-          </label>
-          <span class="control-description">Display the length (magnitude) of each token's embedding vector</span>
-        </div>
+        ${controls.join('')}
       </div>
     `;
+  }
+
+  createTokenExamples(tokens) {
+    const examples = tokens.map((token, index) => 
+      `<span class="token-example">"${token.text}" → ID ${index}</span>`
+    ).join('');
     
-    return matrix;
+    return `<div class="token-examples">${examples}</div>`;
+  }
+
+  createEmbeddingInfo() {
+    const stats = [
+      { value: '~50,000', label: 'Vocabulary Size', description: 'Total unique tokens' },
+      { value: '768', label: 'Embedding Dimension', description: 'Vector size per token' },
+      { value: '~38M', label: 'Total Parameters', description: 'Model parameters' }
+    ];
+    
+    return HTMLUtils.createStats(stats, 'grid');
+  }
+
+  createLookupExample() {
+    const steps = [
+      {
+        title: 'Input',
+        description: 'Token ID 1',
+        example: 'Token ID 1'
+      },
+      {
+        title: 'Output',
+        description: '768-dimensional vector',
+        example: '[0.23, -0.45, 0.67, ...] (768D)'
+      }
+    ];
+    
+    return HTMLUtils.createProcess(steps, false);
+  }
+
+  createEmbeddingFeatures() {
+    const features = [
+      '🎨 Color-coded by value',
+      '📏 768 dimensions per token',
+      '🔢 Interactive numerical display',
+      '📊 Vector magnitude calculation'
+    ];
+    
+    return `<div class="embedding-features">${features.map(f => `<div class="feature-item">${f}</div>`).join('')}</div>`;
   }
 
   createDictionaryDetails(tokens, embeddings) {
@@ -1560,248 +1533,246 @@ class LanguageModelExplorer {
     const maxDim = Math.min(12, encoding[0]?.encoding?.length || 0);
     const maxPos = Math.min(6, encoding.length);
     
-    let heatmap = `
-      <div class="positional-header">
-        <h5>Positional Encoding: Why and How</h5>
-        <p class="positional-subtitle">Understanding how transformers encode position information in sequences</p>
-      </div>
-      
-      <!-- Educational Section - Full Width -->
-      <div class="positional-education">
-        <div class="education-tabs">
-          <button class="tab-btn active" data-tab="problem">The Problem</button>
-          <button class="tab-btn" data-tab="solution">The Solution</button>
-          <button class="tab-btn" data-tab="calculation">Calculation</button>
-          <button class="tab-btn" data-tab="transformation">Transformation</button>
-        </div>
+    // Create tabs using utility
+    const tabs = [
+      {
+        id: 'problem',
+        label: 'The Problem',
+        content: this.createProblemTab()
+      },
+      {
+        id: 'solution',
+        label: 'The Solution',
+        content: this.createSolutionTab()
+      },
+      {
+        id: 'calculation',
+        label: 'Calculation',
+        content: this.createCalculationTab()
+      },
+      {
+        id: 'transformation',
+        label: 'Transformation',
+        content: this.createTransformationTab()
+      }
+    ];
+
+    const tabsHtml = HTMLUtils.createTabs(tabs);
+    
+    // Create the heatmap using utility
+    const heatmapData = Array.from({length: maxDim}, (_, dim) => 
+      Array.from({length: maxPos}, (_, pos) => encoding[pos]?.encoding[dim] || 0)
+    );
+    
+    const heatmapOptions = {
+      title: 'Positional Encoding Values',
+      maxRows: maxDim,
+      maxCols: maxPos,
+      rowLabels: Array.from({length: maxDim}, (_, i) => `Dim ${i}`),
+      cellRenderer: (value, rowIndex, colIndex) => {
+        const color = this.getPositionalColor(value);
+        const intensity = Math.min(Math.abs(value) * 1.5, 1);
+        const isEven = rowIndex % 2 === 0;
+        const functionType = isEven ? 'sin' : 'cos';
         
-        <div class="tab-content">
-          <!-- Problem Tab -->
-          <div class="tab-pane active" id="problem">
-            <div class="problem-illustration">
-              <h6>🤔 Why Do We Need Positional Encoding?</h6>
-              <div class="problem-example">
-                <div class="sequence-example">
-                  <div class="token-sequence">
-                    <span class="token">"I"</span>
-                    <span class="token">"love"</span>
-                    <span class="token">"you"</span>
-                  </div>
-                  <div class="sequence-example">
-                    <span class="token">"You"</span>
-                    <span class="token">"love"</span>
-                    <span class="token">"me"</span>
-                  </div>
-                </div>
-                <p class="problem-text">
-                  <strong>Problem:</strong> Without positional information, transformers see both sequences as identical 
-                  (same tokens, different meaning). They need to know the <em>order</em> of tokens!
-                </p>
-              </div>
-            </div>
+        return `
+          <div style="
+            background-color: ${color}; 
+            opacity: ${intensity + 0.3}; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            border-radius: 4px;
+          ">
+            <span style="font-size: 0.6rem; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${value.toFixed(3)}</span>
+            <div style="
+              position: absolute; 
+              top: 2px; 
+              right: 2px; 
+              font-size: 0.5rem; 
+              background: rgba(0,0,0,0.6); 
+              color: white; 
+              padding: 1px 3px; 
+              border-radius: 2px;
+            ">${functionType}</div>
           </div>
-          
-          <!-- Solution Tab -->
-          <div class="tab-pane" id="solution">
-            <div class="solution-illustration">
-              <h6>💡 How Positional Encoding Solves This</h6>
-              <div class="solution-steps">
-                <div class="step">
-                  <span class="step-number">1</span>
-                  <p>Add unique position information to each token</p>
-                </div>
-                <div class="step">
-                  <span class="step-number">2</span>
-                  <p>Use mathematical functions (sine/cosine) for smooth patterns</p>
-                </div>
-                <div class="step">
-                  <span class="step-number">3</span>
-                  <p>Each position gets a unique "fingerprint"</p>
-                </div>
-                <div class="step">
-                  <span class="step-number">4</span>
-                  <p>Model can learn relative distances between positions</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Calculation Tab -->
-          <div class="tab-pane" id="calculation">
-            <div class="calculation-illustration">
-              <h6>🧮 Mathematical Formulas</h6>
-              <div class="formula-explanation">
-                <div class="formula-box">
-                  <h6>For Even Dimensions (2i):</h6>
-                  <div class="formula-math">PE(pos, 2i) = sin(pos/10000^(2i/d_model))</div>
-                  <p>Uses sine function for smooth, periodic patterns</p>
-                </div>
-                <div class="formula-box">
-                  <h6>For Odd Dimensions (2i+1):</h6>
-                  <div class="formula-math">PE(pos, 2i+1) = cos(pos/10000^(2i/d_model))</div>
-                  <p>Uses cosine function, offset by 90° from sine</p>
-                </div>
-                <div class="formula-params">
-                  <p><strong>Where:</strong></p>
-                  <ul>
-                    <li><strong>pos</strong> = token position (0, 1, 2, ...)</li>
-                    <li><strong>d_model</strong> = embedding dimension (768)</li>
-                    <li><strong>i</strong> = dimension index (0, 1, 2, ...)</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Transformation Tab -->
-          <div class="tab-pane" id="transformation">
-            <div class="transformation-illustration">
-              <h6>🔄 How It Transforms Embeddings</h6>
-              <div class="transformation-process">
-                <div class="process-step">
-                  <h6>Step 1: Original Embeddings</h6>
-                  <p>Dictionary embeddings have no position information</p>
-                  <div class="embedding-example">
-                    <span class="example-label">Token "hello":</span>
-                    <span class="example-vector">[0.23, -0.45, 0.67, ...] (768D)</span>
-                  </div>
-                </div>
-                <div class="process-arrow">↓</div>
-                <div class="process-step">
-                  <h6>Step 2: Add Positional Encoding</h6>
-                  <p>Position-specific values are added to each dimension</p>
-                  <div class="embedding-example">
-                    <span class="example-label">Position 0 encoding:</span>
-                    <span class="example-vector">[0.00, 1.00, 0.00, ...] (768D)</span>
-                  </div>
-                </div>
-                <div class="process-arrow">↓</div>
-                <div class="process-step">
-                  <h6>Step 3: Final Embeddings</h6>
-                  <p>Combined embeddings now contain position information</p>
-                  <div class="embedding-example">
-                    <span class="example-label">Final "hello" at pos 0:</span>
-                    <span class="example-vector">[0.23, 0.55, 0.67, ...] (768D)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        `;
+      }
+    };
+
+    const heatmap = HTMLUtils.createMatrix(heatmapData, heatmapOptions);
+    
+    // Create color legend using utility
+    const legendItems = [
+      { color: 'var(--teal)', label: 'Positive Values' },
+      { color: 'var(--red)', label: 'Negative Values' },
+      { color: 'var(--grey)', label: 'Zero Values' },
+      { color: 'var(--teal)', colorClass: 'function-sin', label: 'Sine Function (even dims)' },
+      { color: 'var(--green)', colorClass: 'function-cos', label: 'Cosine Function (odd dims)' }
+    ];
+
+    const colorLegend = HTMLUtils.createColorLegend(legendItems);
+    
+    // Create key insights using utility
+    const insights = [
+      {
+        value: '🎯',
+        label: 'Unique Patterns',
+        description: 'Each position gets a completely unique encoding pattern across all 768 dimensions'
+      },
+      {
+        value: '📏',
+        label: 'Relative Distances',
+        description: 'The model can learn relationships between positions (e.g., "next to", "far from")'
+      },
+      {
+        value: '🚀',
+        label: 'Generalization',
+        description: 'Works for sequences longer than training data due to mathematical properties'
+      },
+      {
+        value: '⚡',
+        label: 'No Parameters',
+        description: 'Fixed mathematical function, no training needed - always works the same way'
+      }
+    ];
+
+    const insightsHtml = HTMLUtils.createStats(insights, 'grid');
+    
+    return `
+      ${HTMLUtils.createSectionHeader('Positional Encoding: Why and How', 'Understanding how transformers encode position information in sequences')}
+      <div class="positional-education">
+        ${tabsHtml}
       </div>
-      
-      <!-- Interactive Visualization - Full Width -->
       <div class="positional-visualization">
         <h6>🎯 Interactive Positional Encoding Visualization</h6>
         <p class="visualization-subtitle">Hover over cells to see actual calculated values and explore the patterns</p>
         
         <div class="visualization-controls">
-          <label class="control-label">
-            <input type="checkbox" id="showPositionalValues" class="control-checkbox" checked>
-            Show Numerical Values
-          </label>
-          <label class="control-label">
-            <input type="checkbox" id="highlightPatterns" class="control-checkbox">
-            Highlight Patterns
-          </label>
+          ${HTMLUtils.createControlGroup('showPositionalValues', 'Show Numerical Values', 'Display the actual numbers in each cell', 'checkbox', true)}
+          ${HTMLUtils.createControlGroup('highlightPatterns', 'Highlight Patterns', 'Distinguish between sine and cosine functions')}
         </div>
         
-        <div class="positional-content">
-          <!-- Position Labels -->
-          <div class="position-labels">
-            <div class="label-spacer"></div>
-            ${Array.from({length: maxPos}, (_, pos) => `
-              <div class="position-label" title="Position ${pos}">Pos ${pos}</div>
-            `).join('')}
-          </div>
-          
-          <!-- Heatmap Grid -->
-          <div class="heatmap-grid">
-            <!-- Dimension Labels -->
-            <div class="dimension-labels-column">
-              ${Array.from({length: maxDim}, (_, dim) => `
-                <div class="dim-label-vertical" title="Dimension ${dim}">Dim ${dim}</div>
-              `).join('')}
-            </div>
-            
-            <!-- Heatmap Cells -->
-            <div class="heatmap-cells">
-              ${Array.from({length: maxDim}, (_, dim) => `
-                <div class="heatmap-row">
-                  ${Array.from({length: maxPos}, (_, pos) => {
-                    const value = encoding[pos]?.encoding[dim] || 0;
-                    const color = this.getPositionalColor(value);
-                    const intensity = Math.min(Math.abs(value) * 1.5, 1);
-                    const isEven = dim % 2 === 0;
-                    const functionType = isEven ? 'sin' : 'cos';
-                    return `
-                      <div class="heatmap-cell" 
-                           data-position="${pos}" 
-                           data-dimension="${dim}"
-                           data-function="${functionType}"
-                           style="background-color: ${color}; opacity: ${intensity + 0.3}"
-                           title="Position ${pos}, Dimension ${dim} (${functionType}): ${value.toFixed(4)}">
-                        <span class="heatmap-value">${value.toFixed(3)}</span>
-                        <div class="function-indicator">${functionType}</div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          
-          <!-- Color Legend -->
-          <div class="color-legend">
-            <div class="legend-item">
-              <div class="legend-color positive"></div>
-              <span>Positive Values</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color negative"></div>
-              <span>Negative Values</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color zero"></div>
-              <span>Zero Values</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color function-sin"></div>
-              <span>Sine Function (even dims)</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color function-cos"></div>
-              <span>Cosine Function (odd dims)</span>
-            </div>
-          </div>
-        </div>
+        ${heatmap}
+        ${colorLegend}
       </div>
-      
-      <!-- Key Insights - Full Width -->
       <div class="key-insights">
         <h6>🔑 Key Insights About Positional Encoding</h6>
-        <div class="insights-grid">
-          <div class="insight-card">
-            <h6>🎯 Unique Patterns</h6>
-            <p>Each position gets a completely unique encoding pattern across all 768 dimensions</p>
+        ${insightsHtml}
+      </div>
+    `;
+  }
+
+  createProblemTab() {
+    return `
+      <div class="problem-illustration">
+        <h6>🤔 Why Do We Need Positional Encoding?</h6>
+        <div class="problem-example">
+          <div class="sequence-example">
+            <div class="token-sequence">
+              <span class="token">"I"</span>
+              <span class="token">"love"</span>
+              <span class="token">"you"</span>
+            </div>
+            <div class="sequence-example">
+              <span class="token">"You"</span>
+              <span class="token">"love"</span>
+              <span class="token">"me"</span>
+            </div>
           </div>
-          <div class="insight-card">
-            <h6>📏 Relative Distances</h6>
-            <p>The model can learn relationships between positions (e.g., "next to", "far from")</p>
+          <p class="problem-text">
+            <strong>Problem:</strong> Without positional information, transformers see both sequences as identical 
+            (same tokens, different meaning). They need to know the <em>order</em> of tokens!
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  createSolutionTab() {
+    const steps = [
+      {
+        title: 'Add unique position information to each token',
+        description: 'Each position gets a unique identifier'
+      },
+      {
+        title: 'Use mathematical functions (sine/cosine) for smooth patterns',
+        description: 'Creates smooth, learnable patterns'
+      },
+      {
+        title: 'Each position gets a unique "fingerprint"',
+        description: 'No two positions are identical'
+      },
+      {
+        title: 'Model can learn relative distances between positions',
+        description: 'Understands spatial relationships'
+      }
+    ];
+
+    return `
+      <div class="solution-illustration">
+        <h6>💡 How Positional Encoding Solves This</h6>
+        ${HTMLUtils.createProcess(steps)}
+      </div>
+    `;
+  }
+
+  createCalculationTab() {
+    return `
+      <div class="calculation-illustration">
+        <h6>🧮 Mathematical Formulas</h6>
+        <div class="formula-explanation">
+          <div class="formula-box">
+            <h6>For Even Dimensions (2i):</h6>
+            <div class="formula-math">PE(pos, 2i) = sin(pos/10000^(2i/d_model))</div>
+            <p>Uses sine function for smooth, periodic patterns</p>
           </div>
-          <div class="insight-card">
-            <h6>🚀 Generalization</h6>
-            <p>Works for sequences longer than training data due to mathematical properties</p>
+          <div class="formula-box">
+            <h6>For Odd Dimensions (2i+1):</h6>
+            <div class="formula-math">PE(pos, 2i+1) = cos(pos/10000^(2i/d_model))</div>
+            <p>Uses cosine function, offset by 90° from sine</p>
           </div>
-          <div class="insight-card">
-            <h6>⚡ No Parameters</h6>
-            <p>Fixed mathematical function, no training needed - always works the same way</p>
+          <div class="formula-params">
+            <p><strong>Where:</strong></p>
+            <ul>
+              <li><strong>pos</strong> = token position (0, 1, 2, ...)</li>
+              <li><strong>d_model</strong> = embedding dimension (768)</li>
+              <li><strong>i</strong> = dimension index (0, 1, 2, ...)</li>
+            </ul>
           </div>
         </div>
       </div>
     `;
-    
-    return heatmap;
+  }
+
+  createTransformationTab() {
+    const steps = [
+      {
+        title: 'Original Embeddings',
+        description: 'Dictionary embeddings have no position information',
+        example: 'Token "hello": [0.23, -0.45, 0.67, ...] (768D)'
+      },
+      {
+        title: 'Add Positional Encoding',
+        description: 'Position-specific values are added to each dimension',
+        example: 'Position 0 encoding: [0.00, 1.00, 0.00, ...] (768D)'
+      },
+      {
+        title: 'Final Embeddings',
+        description: 'Combined embeddings now contain position information',
+        example: 'Final "hello" at pos 0: [0.23, 0.55, 0.67, ...] (768D)'
+      }
+    ];
+
+    return `
+      <div class="transformation-illustration">
+        <h6>🔄 How It Transforms Embeddings</h6>
+        ${HTMLUtils.createProcess(steps)}
+      </div>
+    `;
   }
 
   createPositionalDetails(encoding) {
