@@ -1209,12 +1209,14 @@ class LanguageModelExplorer {
             <input type="checkbox" id="showValues" class="control-checkbox" checked>
             Show Numerical Values
           </label>
+          <span class="control-description">Display the actual numbers in each embedding cell</span>
         </div>
         <div class="control-group">
           <label class="control-label">
             <input type="checkbox" id="showMagnitudes" class="control-checkbox">
             Show Vector Magnitudes
           </label>
+          <span class="control-description">Display the length (magnitude) of each token's embedding vector</span>
         </div>
       </div>
     `;
@@ -1449,16 +1451,240 @@ class LanguageModelExplorer {
     const details = document.getElementById('dictionaryDetails');
     
     if (heatmap) {
-      heatmap.innerHTML = this.createPositionalHeatmap(
+      heatmap.innerHTML = this.createInteractivePositionalHeatmap(
         this.embeddingsData.positionalEncoding
       );
     }
     
     if (details) {
-      details.innerHTML = this.createEmbeddingDetails(
-        this.embeddingsData.positionalEncoding,
-        'positional'
+      details.innerHTML = this.createPositionalDetails(
+        this.embeddingsData.positionalEncoding
       );
+    }
+
+    // Add interactive event listeners
+    this.setupPositionalInteractivity();
+  }
+
+  createInteractivePositionalHeatmap(encoding) {
+    const maxDim = Math.min(16, encoding[0]?.encoding?.length || 0);
+    const maxPos = Math.min(8, encoding.length);
+    
+    let heatmap = `
+      <div class="positional-header">
+        <h5>Positional Encoding Visualization</h5>
+        <p class="positional-subtitle">How position information is added to each token</p>
+      </div>
+      
+      <div class="positional-content">
+        <!-- Position Labels -->
+        <div class="position-labels">
+          <div class="label-spacer"></div>
+          ${Array.from({length: maxPos}, (_, pos) => `
+            <div class="position-label" title="Position ${pos}">Pos ${pos}</div>
+          `).join('')}
+        </div>
+        
+        <!-- Heatmap Grid -->
+        <div class="heatmap-grid">
+          <!-- Dimension Labels -->
+          <div class="dimension-labels-column">
+            ${Array.from({length: maxDim}, (_, dim) => `
+              <div class="dim-label-vertical" title="Dimension ${dim}">Dim ${dim}</div>
+            `).join('')}
+          </div>
+          
+          <!-- Heatmap Cells -->
+          <div class="heatmap-cells">
+            ${Array.from({length: maxDim}, (_, dim) => `
+              <div class="heatmap-row">
+                ${Array.from({length: maxPos}, (_, pos) => {
+                  const value = encoding[pos]?.encoding[dim] || 0;
+                  const color = this.getPositionalColor(value);
+                  const intensity = Math.min(Math.abs(value) * 1.5, 1);
+                  return `
+                    <div class="heatmap-cell" 
+                         data-position="${pos}" 
+                         data-dimension="${dim}"
+                         style="background-color: ${color}; opacity: ${intensity + 0.3}"
+                         title="Position ${pos}, Dimension ${dim}: ${value.toFixed(3)}">
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- Color Legend -->
+        <div class="color-legend">
+          <div class="legend-item">
+            <div class="legend-color positive"></div>
+            <span>Positive Values (sin)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color negative"></div>
+            <span>Negative Values (cos)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color zero"></div>
+            <span>Zero Values</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return heatmap;
+  }
+
+  createPositionalDetails(encoding) {
+    if (!encoding || encoding.length === 0) return '<p>No data available</p>';
+    
+    const avgMagnitude = encoding.reduce((sum, enc) => sum + enc.magnitude, 0) / encoding.length;
+    const maxMagnitude = Math.max(...encoding.map(enc => enc.magnitude));
+    const minMagnitude = Math.min(...encoding.map(enc => enc.magnitude));
+    
+    return `
+      <div class="positional-explanation">
+        <h5>How Positional Encoding Works</h5>
+        
+        <div class="explanation-section">
+          <h6>🔢 The Problem</h6>
+          <p>Transformers process all tokens simultaneously, so they need a way to know the order/position of tokens in the sequence.</p>
+        </div>
+        
+        <div class="explanation-section">
+          <h6>📍 The Solution</h6>
+          <p>Add position-specific information to each token's embedding using mathematical functions (sine and cosine).</p>
+        </div>
+        
+        <div class="formula-section">
+          <h6>📐 Mathematical Formulas</h6>
+          <div class="formula-container">
+            <div class="formula">
+              <span class="formula-label">Even dimensions (2i):</span>
+              <span class="formula-math">PE(pos, 2i) = sin(pos/10000^(2i/d_model))</span>
+            </div>
+            <div class="formula">
+              <span class="formula-label">Odd dimensions (2i+1):</span>
+              <span class="formula-math">PE(pos, 2i+1) = cos(pos/10000^(2i/d_model))</span>
+            </div>
+          </div>
+          <p class="formula-note">Where d_model = 768 (embedding dimension)</p>
+        </div>
+        
+        <div class="explanation-section">
+          <h6>🎯 Why This Works</h6>
+          <ul class="benefits-list">
+            <li><strong>Unique patterns:</strong> Each position gets a unique encoding pattern</li>
+            <li><strong>Relative distances:</strong> Model can learn relationships between positions</li>
+            <li><strong>Generalization:</strong> Works for sequences longer than training data</li>
+            <li><strong>No parameters:</strong> Fixed mathematical function, no training needed</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="positional-stats">
+        <h5>Positional Encoding Statistics</h5>
+        <div class="stat-item">
+          <span class="stat-label">Sequence Length:</span>
+          <span class="stat-value">${encoding.length}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Embedding Dimension:</span>
+          <span class="stat-value">${encoding[0]?.encoding?.length || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Average Magnitude:</span>
+          <span class="stat-value">${avgMagnitude.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Max Magnitude:</span>
+          <span class="stat-value">${maxMagnitude.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Min Magnitude:</span>
+          <span class="stat-value">${minMagnitude.toFixed(3)}</span>
+        </div>
+      </div>
+      
+      <div class="interactive-features">
+        <h5>Interactive Features</h5>
+        <ul class="feature-list">
+          <li>🔍 <strong>Hover over cells</strong> to see exact values</li>
+          <li>📊 <strong>Color coding</strong> shows positive/negative patterns</li>
+          <li>📍 <strong>Position labels</strong> show token order</li>
+          <li>📐 <strong>Dimension labels</strong> show embedding features</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  setupPositionalInteractivity() {
+    // Heatmap cell hover effects
+    document.querySelectorAll('.heatmap-cell').forEach(cell => {
+      cell.addEventListener('mouseenter', () => {
+        const position = parseInt(cell.dataset.position);
+        const dimension = parseInt(cell.dataset.dimension);
+        this.highlightPositionalCell(position, dimension);
+      });
+      
+      cell.addEventListener('mouseleave', () => {
+        this.clearPositionalHighlights();
+      });
+    });
+  }
+
+  highlightPositionalCell(position, dimension) {
+    // Highlight the specific cell
+    const cell = document.querySelector(`.heatmap-cell[data-position="${position}"][data-dimension="${dimension}"]`);
+    if (cell) {
+      cell.classList.add('cell-highlighted');
+    }
+    
+    // Highlight the corresponding position and dimension labels
+    const positionLabel = document.querySelector(`.position-label:nth-child(${position + 2})`);
+    if (positionLabel) {
+      positionLabel.classList.add('label-highlighted');
+    }
+    
+    const dimLabel = document.querySelector(`.dim-label-vertical:nth-child(${dimension + 1})`);
+    if (dimLabel) {
+      dimLabel.classList.add('label-highlighted');
+    }
+  }
+
+  clearPositionalHighlights() {
+    document.querySelectorAll('.cell-highlighted, .label-highlighted').forEach(el => {
+      el.classList.remove('cell-highlighted', 'label-highlighted');
+    });
+  }
+
+  getPositionalColor(value) {
+    // Create a color gradient for positional encoding
+    // Positive values: Teal to Green (sine function)
+    // Negative values: Light red to darker red (cosine function)
+    // Zero values: Neutral grey
+    
+    const intensity = Math.min(Math.abs(value) * 1.5, 1);
+    
+    if (value > 0) {
+      // Teal to Green gradient for positive values (sine)
+      if (intensity < 0.5) {
+        return `rgba(20, 184, 166, ${intensity + 0.3})`; // Light teal
+      } else {
+        return `rgba(16, 185, 129, ${intensity + 0.3})`; // Green
+      }
+    } else if (value < 0) {
+      // Light red to darker red for negative values (cosine)
+      if (intensity < 0.5) {
+        return `rgba(239, 68, 68, ${intensity + 0.3})`; // Light red
+      } else {
+        return `rgba(185, 28, 28, ${intensity + 0.3})`; // Darker red
+      }
+    } else {
+      // Neutral grey for zero values
+      return 'rgba(156, 163, 175, 0.4)';
     }
   }
 
