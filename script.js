@@ -1131,20 +1131,53 @@ class LanguageModelExplorer {
       <!-- Instructional Carousel below header -->
       <div class="instructional-carousel">
         <div class="carousel-item active">
-          <h6>🔤 Input Tokens</h6>
+          <h6>🔤 Token Input</h6>
           <p>Each word or subword becomes a unique token ID that gets looked up in the embedding dictionary.</p>
+          <div class="token-examples">
+            <span class="token-example">"[CLS]" → ID 0</span>
+            <span class="token-example">"Hello" → ID 1</span>
+            <span class="token-example">"wor" → ID 2</span>
+          </div>
         </div>
         <div class="carousel-item">
-          <h6>📚 Embedding Dictionary</h6>
+          <h6>📚 Embedding Table</h6>
           <p>Pre-trained lookup table with ~50,000 token vectors, each 768 dimensions. Total parameters: ~38M.</p>
+          <div class="embedding-info">
+            <div class="info-item">
+              <strong>Vocabulary Size:</strong> ~50,000 tokens
+            </div>
+            <div class="info-item">
+              <strong>Embedding Dimension:</strong> 768
+            </div>
+            <div class="info-item">
+              <strong>Total Parameters:</strong> ~38M
+            </div>
+          </div>
         </div>
         <div class="carousel-item">
           <h6>🔍 Vector Lookup</h6>
           <p>Each token ID retrieves its corresponding 768D vector from the dictionary table.</p>
+          <div class="lookup-example">
+            <div class="lookup-step">
+              <span class="step-label">Input:</span>
+              <span class="step-value">Token ID 1</span>
+            </div>
+            <div class="lookup-arrow">↓</div>
+            <div class="lookup-step">
+              <span class="step-label">Output:</span>
+              <span class="step-value">[0.23, -0.45, 0.67, ...] (768D)</span>
+            </div>
+          </div>
         </div>
         <div class="carousel-item">
-          <h6>📊 Output Embeddings</h6>
+          <h6>📊 Resulting Embeddings</h6>
           <p>The resulting matrix shows each token's embedding vector with color-coded values.</p>
+          <div class="embedding-features">
+            <div class="feature-item">🎨 Color-coded by value</div>
+            <div class="feature-item">📏 768 dimensions per token</div>
+            <div class="feature-item">🔢 Interactive numerical display</div>
+            <div class="feature-item">📊 Vector magnitude calculation</div>
+          </div>
         </div>
         <div class="carousel-nav">
           <button class="carousel-btn prev">‹</button>
@@ -1533,7 +1566,7 @@ class LanguageModelExplorer {
         <p class="positional-subtitle">Understanding how transformers encode position information in sequences</p>
       </div>
       
-      <!-- Educational Section -->
+      <!-- Educational Section - Full Width -->
       <div class="positional-education">
         <div class="education-tabs">
           <button class="tab-btn active" data-tab="problem">The Problem</button>
@@ -1657,7 +1690,7 @@ class LanguageModelExplorer {
         </div>
       </div>
       
-      <!-- Interactive Visualization -->
+      <!-- Interactive Visualization - Full Width -->
       <div class="positional-visualization">
         <h6>🎯 Interactive Positional Encoding Visualization</h6>
         <p class="visualization-subtitle">Hover over cells to see actual calculated values and explore the patterns</p>
@@ -1744,7 +1777,7 @@ class LanguageModelExplorer {
         </div>
       </div>
       
-      <!-- Key Insights -->
+      <!-- Key Insights - Full Width -->
       <div class="key-insights">
         <h6>🔑 Key Insights About Positional Encoding</h6>
         <div class="insights-grid">
