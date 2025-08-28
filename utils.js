@@ -499,19 +499,19 @@ export class UIRenderer {
     const viewControls = `
       <div class="view-controls">
         <button class="view-btn ${currentView === 'flow' ? 'active' : ''}" 
-                onclick="${onViewChange}('flow')">
+                data-view="flow">
           Flow View
         </button>
         <button class="view-btn ${currentView === 'grid' ? 'active' : ''}" 
-                onclick="${onViewChange}('grid')">
+                data-view="grid">
           Grid View
         </button>
       </div>
     `;
 
     const visualizerContent = currentView === 'flow' 
-      ? this.renderFlowView(result, selectedToken, onTokenSelect)
-      : this.renderGridView(result, selectedToken, onTokenSelect);
+      ? this.renderFlowView(result, selectedToken)
+      : this.renderGridView(result, selectedToken);
 
     const tokenDetails = selectedToken !== null 
       ? this.renderTokenDetails(result, selectedToken)
@@ -530,14 +530,13 @@ export class UIRenderer {
     `;
   }
 
-  static renderFlowView(result, selectedToken, onTokenSelect) {
+  static renderFlowView(result, selectedToken) {
     return `
       <div class="flow-view">
         <div class="token-flow">
           ${result.tokens.map((token, index) => `
             <div class="token-item ${selectedToken === index ? 'selected' : ''}"
                  data-token-index="${index}"
-                 onclick="${onTokenSelect}(${index})"
                  style="
                    background-color: ${this.getTokenBackground(token, index, selectedToken)};
                    border-color: ${this.getTokenColor(token, index, selectedToken)};
@@ -555,14 +554,13 @@ export class UIRenderer {
     `;
   }
 
-  static renderGridView(result, selectedToken, onTokenSelect) {
+  static renderGridView(result, selectedToken) {
     return `
       <div class="grid-view">
         <div class="token-grid">
           ${result.tokens.map((token, index) => `
             <div class="token-card ${selectedToken === index ? 'selected' : ''}"
                  data-token-index="${index}"
-                 onclick="${onTokenSelect}(${index})"
                  style="
                    background-color: ${this.getTokenBackground(token, index, selectedToken)};
                    border-color: ${this.getTokenColor(token, index, selectedToken)};

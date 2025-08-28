@@ -472,27 +472,11 @@ class LanguageModelExplorer {
     const tokenVisualizer = document.getElementById('tokenVisualizer');
     if (!tokenVisualizer) return;
     
-    tokenVisualizer.innerHTML = `
-      <div class="visualizer-card">
-        <div class="visualizer-header">
-          <h3 class="visualizer-title">Token Visualization</h3>
-          <div class="view-controls">
-            <button class="view-btn ${this.currentView === 'flow' ? 'active' : ''}" 
-                    onclick="explorer.setView('flow')">
-              Flow View
-            </button>
-            <button class="view-btn ${this.currentView === 'grid' ? 'active' : ''}" 
-                    onclick="explorer.setView('grid')">
-              Grid View
-            </button>
-          </div>
-        </div>
-
-        ${this.currentView === 'flow' ? this.renderFlowView(result) : this.renderGridView(result)}
-
-        ${this.selectedToken !== null ? this.renderTokenDetails(result) : ''}
-      </div>
-    `;
+    tokenVisualizer.innerHTML = UIRenderer.renderTokenVisualizer(
+      result, 
+      this.currentView, 
+      this.selectedToken
+    );
     
     tokenVisualizer.style.display = 'block';
     this.setupTokenInteractions();
@@ -623,6 +607,14 @@ class LanguageModelExplorer {
       
       tokenElement.addEventListener('mouseleave', () => {
         this.unhighlightToken();
+      });
+    });
+
+    // Add view change events
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        this.setView(view);
       });
     });
   }
