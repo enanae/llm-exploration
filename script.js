@@ -11,10 +11,32 @@ class LanguageModelExplorer {
   }
 
   initialize() {
+    console.log('LanguageModelExplorer initializing...');
+    
+    // Hide fallback message and show interface
+    this.showInterface();
+    
     this.setupModelSelector();
     this.setupEventListeners();
     this.updateModelInfo();
     this.analyzeTokenization();
+    
+    console.log('LanguageModelExplorer initialized successfully');
+  }
+
+  showInterface() {
+    // Hide fallback message
+    const fallback = document.querySelector('.fallback');
+    if (fallback) {
+      fallback.style.display = 'none';
+    }
+    
+    // Show header and main content
+    const header = document.querySelector('.header');
+    const main = document.querySelector('.main');
+    
+    if (header) header.style.display = 'block';
+    if (main) main.style.display = 'block';
   }
 
   setupModelSelector() {
@@ -28,6 +50,11 @@ class LanguageModelExplorer {
     ];
 
     const modelSelector = document.getElementById('modelSelector');
+    if (!modelSelector) {
+      console.error('Model selector element not found');
+      return;
+    }
+    
     modelSelector.innerHTML = models.map(model => `
       <div class="model-option ${model.id === this.currentModel ? 'selected' : ''}" 
            data-model="${model.id}">
@@ -65,48 +92,70 @@ class LanguageModelExplorer {
     const modelBadge = document.getElementById('currentModel');
     const modelType = document.getElementById('modelType');
     
-    modelBadge.textContent = this.currentModel;
-    modelType.textContent = this.currentModel.includes('gpt') ? 'GPT-style' : 
-                           this.currentModel.includes('bert') ? 'BERT-style' : 'Other';
+    if (modelBadge) modelBadge.textContent = this.currentModel;
+    if (modelType) {
+      modelType.textContent = this.currentModel.includes('gpt') ? 'GPT-style' : 
+                             this.currentModel.includes('bert') ? 'BERT-style' : 'Other';
+    }
   }
 
   setupEventListeners() {
     // Analyze button
-    document.getElementById('analyzeBtn').addEventListener('click', () => {
-      this.analyzeTokenization();
-    });
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) {
+      analyzeBtn.addEventListener('click', () => {
+        this.analyzeTokenization();
+      });
+    }
 
     // Input text changes
-    document.getElementById('input-text').addEventListener('input', () => {
-      this.analyzeTokenization();
-    });
+    const inputText = document.getElementById('input-text');
+    if (inputText) {
+      inputText.addEventListener('input', () => {
+        this.analyzeTokenization();
+      });
+    }
 
     // Parameter changes
-    document.getElementById('addSpecialTokens').addEventListener('change', () => {
-      this.analyzeTokenization();
-    });
+    const addSpecialTokens = document.getElementById('addSpecialTokens');
+    if (addSpecialTokens) {
+      addSpecialTokens.addEventListener('change', () => {
+        this.analyzeTokenization();
+      });
+    }
 
-    document.getElementById('padding').addEventListener('change', () => {
-      this.analyzeTokenization();
-    });
+    const padding = document.getElementById('padding');
+    if (padding) {
+      padding.addEventListener('change', () => {
+        this.analyzeTokenization();
+      });
+    }
 
-    document.getElementById('truncation').addEventListener('change', () => {
-      this.analyzeTokenization();
-    });
+    const truncation = document.getElementById('truncation');
+    if (truncation) {
+      truncation.addEventListener('change', () => {
+        this.analyzeTokenization();
+      });
+    }
 
-    document.getElementById('maxLength').addEventListener('input', () => {
-      this.analyzeTokenization();
-    });
+    const maxLength = document.getElementById('maxLength');
+    if (maxLength) {
+      maxLength.addEventListener('input', () => {
+        this.analyzeTokenization();
+      });
+    }
   }
 
   async analyzeTokenization() {
-    const inputText = document.getElementById('input-text').value;
-    if (!inputText.trim()) return;
+    const inputText = document.getElementById('input-text')?.value;
+    if (!inputText || !inputText.trim()) return;
 
     // Show loading state
     const analyzeBtn = document.getElementById('analyzeBtn');
-    analyzeBtn.disabled = true;
-    analyzeBtn.textContent = 'Analyzing...';
+    if (analyzeBtn) {
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = 'Analyzing...';
+    }
 
     try {
       // Simulate API delay
@@ -118,10 +167,13 @@ class LanguageModelExplorer {
       this.displayResults();
       this.hideError();
     } catch (error) {
+      console.error('Tokenization error:', error);
       this.showError('Failed to tokenize text. Please try again.');
     } finally {
-      analyzeBtn.disabled = false;
-      analyzeBtn.textContent = 'Analyze Tokenization';
+      if (analyzeBtn) {
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = 'Analyze Tokenization';
+      }
     }
   }
 
@@ -152,6 +204,8 @@ class LanguageModelExplorer {
 
   displayTokenStats() {
     const result = this.tokenizationResult;
+    if (!result) return;
+    
     const avgTokenLength = result.tokens.reduce((sum, token) => sum + token.length, 0) / result.tokens.length;
     const longestToken = result.tokens.reduce((longest, token) => 
       token.length > longest.length ? token : longest
@@ -170,6 +224,8 @@ class LanguageModelExplorer {
     ];
 
     const tokenStats = document.getElementById('tokenStats');
+    if (!tokenStats) return;
+    
     tokenStats.innerHTML = `
       <div class="stats-card">
         <h3 class="stats-title">Tokenization Statistics</h3>
@@ -202,7 +258,10 @@ class LanguageModelExplorer {
 
   displayTokenVisualizer() {
     const result = this.tokenizationResult;
+    if (!result) return;
+    
     const tokenVisualizer = document.getElementById('tokenVisualizer');
+    if (!tokenVisualizer) return;
     
     tokenVisualizer.innerHTML = `
       <div class="visualizer-card">
@@ -372,17 +431,36 @@ class LanguageModelExplorer {
 
   showError(message) {
     const errorElement = document.getElementById('errorMessage');
-    errorElement.textContent = message;
-    errorElement.style.display = 'block';
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
   }
 
   hideError() {
     const errorElement = document.getElementById('errorMessage');
-    errorElement.style.display = 'none';
+    if (errorElement) {
+      errorElement.style.display = 'none';
+    }
   }
 }
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  window.explorer = new LanguageModelExplorer();
+  console.log('DOM loaded, initializing Language Model Explorer...');
+  try {
+    window.explorer = new LanguageModelExplorer();
+  } catch (error) {
+    console.error('Failed to initialize Language Model Explorer:', error);
+    
+    // Show error message to user
+    const fallback = document.querySelector('.fallback');
+    if (fallback) {
+      fallback.innerHTML = `
+        <h1>Language Model Explorer</h1>
+        <p style="color: #dc2626;">Error: Failed to load the interactive interface.</p>
+        <p>Please check the browser console for more details or refresh the page.</p>
+      `;
+    }
+  }
 });
