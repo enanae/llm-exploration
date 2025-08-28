@@ -165,6 +165,36 @@ class LanguageModelExplorer {
     return tokens;
   }
 
+  splitIntoGPTSubwords(word) {
+    // More realistic GPT-style subword splitting
+    if (word.length <= 3) return [word];
+    
+    // Try to split on common patterns
+    if (word.includes('-')) {
+      return word.split('-');
+    }
+    
+    // Split on common prefixes/suffixes
+    const prefixes = ['un', 're', 'in', 'im', 'dis', 'en', 'em'];
+    const suffixes = ['ing', 'ed', 'er', 'est', 'ly', 'ful', 'less', 'ness'];
+    
+    for (const prefix of prefixes) {
+      if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+        return [prefix, word.substring(prefix.length)];
+      }
+    }
+    
+    for (const suffix of suffixes) {
+      if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+        return [word.substring(0, word.length - suffix.length), suffix];
+      }
+    }
+    
+    // Default splitting
+    const mid = Math.ceil(word.length / 2);
+    return [word.substring(0, mid), word.substring(mid)];
+  }
+
   simulateBERTTokenization(text) {
     // Simulate BERT style tokenization (WordPiece)
     const words = text.split(/\s+/);
@@ -256,14 +286,6 @@ class LanguageModelExplorer {
   simulateRoBERTaTokenization(text) {
     // RoBERTa is similar to BERT but with different preprocessing
     return this.simulateBERTTokenization(text);
-  }
-
-  splitIntoSubwords(word) {
-    // Simple subword splitting simulation
-    if (word.length <= 4) return [word];
-    
-    const mid = Math.ceil(word.length / 2);
-    return [word.substring(0, mid), word.substring(mid)];
   }
 
   splitIntoBERTSubwords(word) {
