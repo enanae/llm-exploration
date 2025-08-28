@@ -101,6 +101,46 @@ The website uses vanilla JavaScript to:
 - Safari 12+
 - Edge 79+
 
+## Development Workflow
+
+### Error Handling & Logging
+
+The application includes comprehensive error handling and logging:
+
+- **Global Error Handlers**: Catches uncaught errors and promise rejections
+- **Syntax Validation**: Pre-commit hooks ensure code quality
+- **Detailed Logging**: Console logging for debugging and monitoring
+- **User-Friendly Errors**: Graceful error display with helpful messages
+- **Fallback Mechanisms**: Application continues working even with partial failures
+
+### Pre-commit Validation
+
+Before each commit, the pre-commit hook automatically runs syntax validation:
+
+```bash
+# Manual validation
+node validate-syntax.js
+
+# Automatic validation (runs on every commit)
+git commit -m "Your commit message"
+```
+
+### Development Branch Workflow
+
+1. **Work in dev branch**: `git checkout -b feature-branch`
+2. **Make changes and test**: Ensure syntax validation passes
+3. **Commit to dev**: `git commit -m "Feature description"`
+4. **Merge to main**: `git checkout main && git merge feature-branch`
+5. **Return to dev**: `git checkout feature-branch`
+
+### Debugging
+
+- **Console Logging**: Extensive logging throughout the application
+- **Global Error Display**: Errors are shown both in console and UI
+- **Instance Access**: Main explorer instance available as `window.languageModelExplorer`
+- **Network Tab**: Check for script loading issues
+- **Syntax Validation**: Run `node validate-syntax.js` to check syntax
+
 ## Contributing
 
 1. Fork the repository
