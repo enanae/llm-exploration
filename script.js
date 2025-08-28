@@ -1128,7 +1128,7 @@ class LanguageModelExplorer {
         <p class="dictionary-subtitle">How tokens get converted to 768-dimensional vectors via the embedding dictionary</p>
       </div>
       
-      <!-- Instructional Carousel at Top -->
+      <!-- Instructional Carousel below header -->
       <div class="instructional-carousel">
         <div class="carousel-item active">
           <h6>🔤 Input Tokens</h6>
@@ -1415,11 +1415,7 @@ class LanguageModelExplorer {
       });
     });
 
-    // Auto-advance carousel
-    setInterval(() => {
-      const newIndex = (currentIndex + 1) % items.length;
-      showItem(newIndex);
-    }, 4000);
+    // No auto-advance - let users click through as they please
   }
 
   toggleMagnitudeDisplay() {
@@ -1528,69 +1524,245 @@ class LanguageModelExplorer {
   }
 
   createInteractivePositionalHeatmap(encoding) {
-    const maxDim = Math.min(16, encoding[0]?.encoding?.length || 0);
-    const maxPos = Math.min(8, encoding.length);
+    const maxDim = Math.min(12, encoding[0]?.encoding?.length || 0);
+    const maxPos = Math.min(6, encoding.length);
     
     let heatmap = `
       <div class="positional-header">
-        <h5>Positional Encoding Visualization</h5>
-        <p class="positional-subtitle">How position information is added to each token using sine/cosine functions</p>
+        <h5>Positional Encoding: Why and How</h5>
+        <p class="positional-subtitle">Understanding how transformers encode position information in sequences</p>
       </div>
       
-      <div class="positional-content">
-        <!-- Position Labels -->
-        <div class="position-labels">
-          <div class="label-spacer"></div>
-          ${Array.from({length: maxPos}, (_, pos) => `
-            <div class="position-label" title="Position ${pos}">Pos ${pos}</div>
-          `).join('')}
+      <!-- Educational Section -->
+      <div class="positional-education">
+        <div class="education-tabs">
+          <button class="tab-btn active" data-tab="problem">The Problem</button>
+          <button class="tab-btn" data-tab="solution">The Solution</button>
+          <button class="tab-btn" data-tab="calculation">Calculation</button>
+          <button class="tab-btn" data-tab="transformation">Transformation</button>
         </div>
         
-        <!-- Heatmap Grid -->
-        <div class="heatmap-grid">
-          <!-- Dimension Labels -->
-          <div class="dimension-labels-column">
-            ${Array.from({length: maxDim}, (_, dim) => `
-              <div class="dim-label-vertical" title="Dimension ${dim}">Dim ${dim}</div>
+        <div class="tab-content">
+          <!-- Problem Tab -->
+          <div class="tab-pane active" id="problem">
+            <div class="problem-illustration">
+              <h6>🤔 Why Do We Need Positional Encoding?</h6>
+              <div class="problem-example">
+                <div class="sequence-example">
+                  <div class="token-sequence">
+                    <span class="token">"I"</span>
+                    <span class="token">"love"</span>
+                    <span class="token">"you"</span>
+                  </div>
+                  <div class="sequence-example">
+                    <span class="token">"You"</span>
+                    <span class="token">"love"</span>
+                    <span class="token">"me"</span>
+                  </div>
+                </div>
+                <p class="problem-text">
+                  <strong>Problem:</strong> Without positional information, transformers see both sequences as identical 
+                  (same tokens, different meaning). They need to know the <em>order</em> of tokens!
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Solution Tab -->
+          <div class="tab-pane" id="solution">
+            <div class="solution-illustration">
+              <h6>💡 How Positional Encoding Solves This</h6>
+              <div class="solution-steps">
+                <div class="step">
+                  <span class="step-number">1</span>
+                  <p>Add unique position information to each token</p>
+                </div>
+                <div class="step">
+                  <span class="step-number">2</span>
+                  <p>Use mathematical functions (sine/cosine) for smooth patterns</p>
+                </div>
+                <div class="step">
+                  <span class="step-number">3</span>
+                  <p>Each position gets a unique "fingerprint"</p>
+                </div>
+                <div class="step">
+                  <span class="step-number">4</span>
+                  <p>Model can learn relative distances between positions</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Calculation Tab -->
+          <div class="tab-pane" id="calculation">
+            <div class="calculation-illustration">
+              <h6>🧮 Mathematical Formulas</h6>
+              <div class="formula-explanation">
+                <div class="formula-box">
+                  <h6>For Even Dimensions (2i):</h6>
+                  <div class="formula-math">PE(pos, 2i) = sin(pos/10000^(2i/d_model))</div>
+                  <p>Uses sine function for smooth, periodic patterns</p>
+                </div>
+                <div class="formula-box">
+                  <h6>For Odd Dimensions (2i+1):</h6>
+                  <div class="formula-math">PE(pos, 2i+1) = cos(pos/10000^(2i/d_model))</div>
+                  <p>Uses cosine function, offset by 90° from sine</p>
+                </div>
+                <div class="formula-params">
+                  <p><strong>Where:</strong></p>
+                  <ul>
+                    <li><strong>pos</strong> = token position (0, 1, 2, ...)</li>
+                    <li><strong>d_model</strong> = embedding dimension (768)</li>
+                    <li><strong>i</strong> = dimension index (0, 1, 2, ...)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Transformation Tab -->
+          <div class="tab-pane" id="transformation">
+            <div class="transformation-illustration">
+              <h6>🔄 How It Transforms Embeddings</h6>
+              <div class="transformation-process">
+                <div class="process-step">
+                  <h6>Step 1: Original Embeddings</h6>
+                  <p>Dictionary embeddings have no position information</p>
+                  <div class="embedding-example">
+                    <span class="example-label">Token "hello":</span>
+                    <span class="example-vector">[0.23, -0.45, 0.67, ...] (768D)</span>
+                  </div>
+                </div>
+                <div class="process-arrow">↓</div>
+                <div class="process-step">
+                  <h6>Step 2: Add Positional Encoding</h6>
+                  <p>Position-specific values are added to each dimension</p>
+                  <div class="embedding-example">
+                    <span class="example-label">Position 0 encoding:</span>
+                    <span class="example-vector">[0.00, 1.00, 0.00, ...] (768D)</span>
+                  </div>
+                </div>
+                <div class="process-arrow">↓</div>
+                <div class="process-step">
+                  <h6>Step 3: Final Embeddings</h6>
+                  <p>Combined embeddings now contain position information</p>
+                  <div class="embedding-example">
+                    <span class="example-label">Final "hello" at pos 0:</span>
+                    <span class="example-vector">[0.23, 0.55, 0.67, ...] (768D)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Interactive Visualization -->
+      <div class="positional-visualization">
+        <h6>🎯 Interactive Positional Encoding Visualization</h6>
+        <p class="visualization-subtitle">Hover over cells to see actual calculated values and explore the patterns</p>
+        
+        <div class="visualization-controls">
+          <label class="control-label">
+            <input type="checkbox" id="showPositionalValues" class="control-checkbox" checked>
+            Show Numerical Values
+          </label>
+          <label class="control-label">
+            <input type="checkbox" id="highlightPatterns" class="control-checkbox">
+            Highlight Patterns
+          </label>
+        </div>
+        
+        <div class="positional-content">
+          <!-- Position Labels -->
+          <div class="position-labels">
+            <div class="label-spacer"></div>
+            ${Array.from({length: maxPos}, (_, pos) => `
+              <div class="position-label" title="Position ${pos}">Pos ${pos}</div>
             `).join('')}
           </div>
           
-          <!-- Heatmap Cells -->
-          <div class="heatmap-cells">
-            ${Array.from({length: maxDim}, (_, dim) => `
-              <div class="heatmap-row">
-                ${Array.from({length: maxPos}, (_, pos) => {
-                  const value = encoding[pos]?.encoding[dim] || 0;
-                  const color = this.getPositionalColor(value);
-                  const intensity = Math.min(Math.abs(value) * 1.5, 1);
-                  return `
-                    <div class="heatmap-cell" 
-                         data-position="${pos}" 
-                         data-dimension="${dim}"
-                         style="background-color: ${color}; opacity: ${intensity + 0.3}"
-                         title="Position ${pos}, Dimension ${dim}: ${value.toFixed(4)}">
-                      <span class="heatmap-value">${value.toFixed(3)}</span>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            `).join('')}
+          <!-- Heatmap Grid -->
+          <div class="heatmap-grid">
+            <!-- Dimension Labels -->
+            <div class="dimension-labels-column">
+              ${Array.from({length: maxDim}, (_, dim) => `
+                <div class="dim-label-vertical" title="Dimension ${dim}">Dim ${dim}</div>
+              `).join('')}
+            </div>
+            
+            <!-- Heatmap Cells -->
+            <div class="heatmap-cells">
+              ${Array.from({length: maxDim}, (_, dim) => `
+                <div class="heatmap-row">
+                  ${Array.from({length: maxPos}, (_, pos) => {
+                    const value = encoding[pos]?.encoding[dim] || 0;
+                    const color = this.getPositionalColor(value);
+                    const intensity = Math.min(Math.abs(value) * 1.5, 1);
+                    const isEven = dim % 2 === 0;
+                    const functionType = isEven ? 'sin' : 'cos';
+                    return `
+                      <div class="heatmap-cell" 
+                           data-position="${pos}" 
+                           data-dimension="${dim}"
+                           data-function="${functionType}"
+                           style="background-color: ${color}; opacity: ${intensity + 0.3}"
+                           title="Position ${pos}, Dimension ${dim} (${functionType}): ${value.toFixed(4)}">
+                        <span class="heatmap-value">${value.toFixed(3)}</span>
+                        <div class="function-indicator">${functionType}</div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <!-- Color Legend -->
+          <div class="color-legend">
+            <div class="legend-item">
+              <div class="legend-color positive"></div>
+              <span>Positive Values</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color negative"></div>
+              <span>Negative Values</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color zero"></div>
+              <span>Zero Values</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color function-sin"></div>
+              <span>Sine Function (even dims)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color function-cos"></div>
+              <span>Cosine Function (odd dims)</span>
+            </div>
           </div>
         </div>
-        
-        <!-- Color Legend -->
-        <div class="color-legend">
-          <div class="legend-item">
-            <div class="legend-color positive"></div>
-            <span>Positive Values (sin)</span>
+      </div>
+      
+      <!-- Key Insights -->
+      <div class="key-insights">
+        <h6>🔑 Key Insights About Positional Encoding</h6>
+        <div class="insights-grid">
+          <div class="insight-card">
+            <h6>🎯 Unique Patterns</h6>
+            <p>Each position gets a completely unique encoding pattern across all 768 dimensions</p>
           </div>
-          <div class="legend-item">
-            <div class="legend-color negative"></div>
-            <span>Negative Values (cos)</span>
+          <div class="insight-card">
+            <h6>📏 Relative Distances</h6>
+            <p>The model can learn relationships between positions (e.g., "next to", "far from")</p>
           </div>
-          <div class="legend-item">
-            <div class="legend-color zero"></div>
-            <span>Zero Values</span>
+          <div class="insight-card">
+            <h6>🚀 Generalization</h6>
+            <p>Works for sequences longer than training data due to mathematical properties</p>
+          </div>
+          <div class="insight-card">
+            <h6>⚡ No Parameters</h6>
+            <p>Fixed mathematical function, no training needed - always works the same way</p>
           </div>
         </div>
       </div>
@@ -1683,6 +1855,9 @@ class LanguageModelExplorer {
   }
 
   setupPositionalInteractivity() {
+    // Tab functionality
+    this.setupPositionalTabs();
+    
     // Heatmap cell hover effects
     document.querySelectorAll('.heatmap-cell').forEach(cell => {
       cell.addEventListener('mouseenter', () => {
@@ -1694,6 +1869,80 @@ class LanguageModelExplorer {
       cell.addEventListener('mouseleave', () => {
         this.clearPositionalHighlights();
       });
+    });
+
+    // Visualization controls
+    const showPositionalValues = document.getElementById('showPositionalValues');
+    const highlightPatterns = document.getElementById('highlightPatterns');
+
+    if (showPositionalValues) {
+      showPositionalValues.addEventListener('change', () => {
+        this.togglePositionalValues();
+      });
+    }
+
+    if (highlightPatterns) {
+      highlightPatterns.addEventListener('change', () => {
+        this.togglePatternHighlighting();
+      });
+    }
+  }
+
+  setupPositionalTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabName = btn.dataset.tab;
+        this.switchPositionalTab(tabName);
+      });
+    });
+  }
+
+  switchPositionalTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+
+    // Update tab content
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === tabName);
+    });
+  }
+
+  togglePositionalValues() {
+    const isEnabled = document.getElementById('showPositionalValues')?.checked;
+    document.querySelectorAll('.heatmap-value').forEach(value => {
+      value.style.display = isEnabled ? 'block' : 'none';
+    });
+  }
+
+  togglePatternHighlighting() {
+    const isEnabled = document.getElementById('highlightPatterns')?.checked;
+    if (isEnabled) {
+      this.highlightSineCosinePatterns();
+    } else {
+      this.clearPatternHighlights();
+    }
+  }
+
+  highlightSineCosinePatterns() {
+    // Highlight sine vs cosine patterns
+    document.querySelectorAll('.heatmap-cell').forEach(cell => {
+      const functionType = cell.dataset.function;
+      if (functionType === 'sin') {
+        cell.style.border = '2px solid var(--teal)';
+      } else {
+        cell.style.border = '2px solid var(--green)';
+      }
+    });
+  }
+
+  clearPatternHighlights() {
+    document.querySelectorAll('.heatmap-cell').forEach(cell => {
+      cell.style.border = '1px solid var(--light-grey)';
     });
   }
 
