@@ -513,8 +513,8 @@
       `;
 
       const visualizerContent = currentView === 'flow' 
-        ? this.renderFlowView(result, selectedToken)
-        : this.renderGridView(result, selectedToken);
+        ? this.renderFlowView(result, selectedToken, true)
+        : this.renderGridView(result, selectedToken, true);
 
       const tokenDetails = selectedToken !== null 
         ? this.renderTokenDetails(result, selectedToken)
@@ -533,9 +533,9 @@
       `;
     }
 
-    static renderFlowView(result, selectedToken) {
+    static renderFlowView(result, selectedToken, isActive = false) {
       return `
-        <div class="flow-view">
+        <div class="flow-view ${isActive ? 'active' : ''}">
           <div class="token-flow">
             ${result.tokens.map((token, index) => `
               <div class="token-item ${selectedToken === index ? 'selected' : ''}"
@@ -557,9 +557,9 @@
       `;
     }
 
-    static renderGridView(result, selectedToken) {
+    static renderGridView(result, selectedToken, isActive = false) {
       return `
-        <div class="grid-view">
+        <div class="grid-view ${isActive ? 'active' : ''}">
           <div class="token-grid">
             ${result.tokens.map((token, index) => `
               <div class="token-card ${selectedToken === index ? 'selected' : ''}"

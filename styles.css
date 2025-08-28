@@ -1037,29 +1037,95 @@ header {
 .matrix-container {
   max-width: 100%;
   overflow-x: auto;
+  border: 1px solid var(--light-grey);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--white);
 }
 
 .matrix-content {
   min-width: fit-content;
+  max-width: 100%;
+}
+
+.matrix-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dark-grey);
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .matrix-header-row {
   display: flex;
   margin-bottom: 0.5rem;
   min-width: fit-content;
+  max-width: 100%;
+}
+
+.header-spacer {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.col-label {
+  width: 40px;
+  height: 30px;
+  min-width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--dark-grey);
+  background: var(--light-grey);
+  border-radius: 4px;
+  margin-right: 2px;
+}
+
+.matrix-rows {
+  min-width: fit-content;
+  max-width: 100%;
+}
+
+.matrix-row {
+  display: flex;
+  margin-bottom: 0.5rem;
+  min-width: fit-content;
+  max-width: 100%;
+}
+
+.row-label {
+  width: 80px;
+  min-width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dark-grey);
+  background: var(--light-grey);
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-right: 2px;
 }
 
 .row-cells {
   display: flex;
   gap: 2px;
   min-width: fit-content;
+  max-width: calc(100% - 90px);
+  overflow-x: auto;
 }
 
 .matrix-cell {
-  width: 40px;
-  height: 30px;
-  min-width: 40px;
-  flex-shrink: 0;
+  width: 40px !important;
+  height: 30px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
   border: 1px solid var(--light-grey);
   border-radius: 4px;
   display: flex;
@@ -1069,6 +1135,7 @@ header {
   cursor: pointer;
   transition: all 0.2s ease;
   background: var(--white);
+  box-sizing: border-box;
 }
 
 .matrix-cell:hover {
