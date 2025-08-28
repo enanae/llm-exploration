@@ -1,5 +1,5 @@
 // Utility functions for HTML generation and common components
-export class HTMLUtils {
+window.HTMLUtils = class HTMLUtils {
   // Create a card container with consistent styling
   static createCard(content, className = '') {
     return `<div class="card ${className}">${content}</div>`;
@@ -220,7 +220,7 @@ export class HTMLUtils {
 }
 
 // Tokenization service to handle all tokenization logic
-export class TokenizationService {
+window.TokenizationService = class TokenizationService {
   // Create a token with consistent structure
   static createToken(id, text, start, end, type, length, subword = false, parentWord = null) {
     return { id, text, start, end, type, length, subword, parentWord };
@@ -366,7 +366,7 @@ export class TokenizationService {
 }
 
 // Model configuration service
-export class ModelConfig {
+window.ModelConfig = class ModelConfig {
   static getModels() {
     return [
       { 
@@ -440,7 +440,7 @@ export class ModelConfig {
 }
 
 // UI rendering service to handle all display logic
-export class UIRenderer {
+window.UIRenderer = class UIRenderer {
   static renderTokenStats(result) {
     if (!result) return '';
     
