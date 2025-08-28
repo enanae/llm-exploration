@@ -1,6 +1,6 @@
 // Language Model Explorer - Main JavaScript
 
-import { HTMLUtils } from './utils.js';
+import { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService } from './utils.js';
 
 class LanguageModelExplorer {
   constructor() {
@@ -13,6 +13,9 @@ class LanguageModelExplorer {
     this.currentStep = 'tokens';
     this.autoPlayInterval = null;
     
+    // Initialize services
+    this.eventManager = new EventManager(this);
+    
     this.initialize();
   }
 
@@ -23,7 +26,7 @@ class LanguageModelExplorer {
     this.showInterface();
     
     this.setupModelSelector();
-    this.setupEventListeners();
+    this.eventManager.setupTokenizationEvents();
     this.updateModelInfo();
     
     // Initialize tokenizers
@@ -94,17 +97,9 @@ class LanguageModelExplorer {
   }
 
   simulateTokenization(text, modelId) {
-    // Simulate different tokenization strategies for different models
-    if (modelId.includes('gpt')) {
-      // GPT-style: byte-pair encoding simulation
-      return this.simulateGPTTokenization(text);
-    } else if (modelId.includes('bert')) {
-      // BERT-style: WordPiece simulation
-      return this.simulateBERTTokenization(text);
-    } else {
-      // RoBERTa-style: similar to BERT but with different preprocessing
-      return this.simulateRoBERTaTokenization(text);
-    }
+    // Use the TokenizationService for all tokenization logic
+    const modelType = ModelConfig.getModelType(modelId);
+    return TokenizationService.simulateTokenization(text, modelType);
   }
 
   simulateGPTTokenization(text) {
@@ -337,14 +332,7 @@ class LanguageModelExplorer {
   }
 
   setupModelSelector() {
-    const models = [
-      { id: 'gpt2', name: 'GPT-2', description: 'OpenAI GPT-2 (124M parameters)' },
-      { id: 'gpt2-medium', name: 'GPT-2 Medium', description: 'OpenAI GPT-2 Medium (355M parameters)' },
-      { id: 'gpt2-large', name: 'GPT-2 Large', description: 'OpenAI GPT-2 Large (774M parameters)' },
-      { id: 'bert-base-uncased', name: 'BERT Base', description: 'Google BERT Base (110M parameters)' },
-      { id: 'distilbert-base-uncased', name: 'DistilBERT', description: 'DistilBERT Base (66M parameters)' },
-      { id: 'roberta-base', name: 'RoBERTa Base', description: 'Facebook RoBERTa Base (125M parameters)' }
-    ];
+    const models = ModelConfig.getModels();
 
     const modelSelector = document.getElementById('modelSelector');
     if (!modelSelector) {
@@ -365,11 +353,9 @@ class LanguageModelExplorer {
       </div>
     `).join('');
 
-    // Add click event listeners
-    modelSelector.querySelectorAll('.model-option').forEach(option => {
-      option.addEventListener('click', () => {
-        this.selectModel(option.dataset.model);
-      });
+    // Use EventManager for model selection
+    this.eventManager.setupModelSelector('modelSelector', (modelId) => {
+      this.selectModel(modelId);
     });
   }
 
@@ -391,57 +377,12 @@ class LanguageModelExplorer {
     
     if (modelBadge) modelBadge.textContent = this.currentModel;
     if (modelType) {
-      modelType.textContent = this.currentModel.includes('gpt') ? 'GPT-style' : 
-                             this.currentModel.includes('bert') ? 'BERT-style' : 'Other';
+      const modelInfo = ModelConfig.getModelInfo(this.currentModel);
+      modelType.textContent = modelInfo ? modelInfo.type : 'Unknown';
     }
   }
 
-  setupEventListeners() {
-    // Analyze button
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    if (analyzeBtn) {
-      analyzeBtn.addEventListener('click', () => {
-        this.analyzeTokenization();
-      });
-    }
-
-    // Input text changes
-    const inputText = document.getElementById('input-text');
-    if (inputText) {
-      inputText.addEventListener('input', () => {
-        this.analyzeTokenization();
-      });
-    }
-
-    // Parameter changes
-    const addSpecialTokens = document.getElementById('addSpecialTokens');
-    if (addSpecialTokens) {
-      addSpecialTokens.addEventListener('change', () => {
-        this.analyzeTokenization();
-      });
-    }
-
-    const padding = document.getElementById('padding');
-    if (padding) {
-      padding.addEventListener('change', () => {
-        this.analyzeTokenization();
-      });
-    }
-
-    const truncation = document.getElementById('truncation');
-    if (truncation) {
-      truncation.addEventListener('change', () => {
-        this.analyzeTokenization();
-      });
-    }
-
-    const maxLength = document.getElementById('maxLength');
-    if (maxLength) {
-      maxLength.addEventListener('input', () => {
-        this.analyzeTokenization();
-      });
-    }
-  }
+  // Event handling moved to EventManager
 
   async analyzeTokenization() {
     const inputText = document.getElementById('input-text')?.value;
@@ -517,53 +458,10 @@ class LanguageModelExplorer {
     const result = this.tokenizationResult;
     if (!result) return;
     
-    const avgTokenLength = result.tokens.reduce((sum, token) => sum + token.length, 0) / result.tokens.length;
-    const longestToken = result.tokens.reduce((longest, token) => 
-      token.length > longest.length ? token : longest
-    );
-    const shortestToken = result.tokens.reduce((shortest, token) => 
-      token.length < shortest.length ? token : shortest
-    );
-
-    const stats = [
-      { label: 'Total Tokens', value: result.totalTokens, color: 'teal' },
-      { label: 'Average Length', value: avgTokenLength.toFixed(1), color: 'green' },
-      { label: 'Longest Token', value: longestToken.text, color: 'teal' },
-      { label: 'Shortest Token', value: shortestToken.text, color: 'green' },
-      { label: 'Model', value: result.model, color: 'grey' },
-      { label: 'Timestamp', value: new Date(result.timestamp).toLocaleTimeString(), color: 'grey' }
-    ];
-
     const tokenStats = document.getElementById('tokenStats');
     if (!tokenStats) return;
     
-    tokenStats.innerHTML = `
-      <div class="stats-card">
-        <h3 class="stats-title">Tokenization Statistics</h3>
-        
-        <div class="stats-grid">
-          ${stats.map(stat => `
-            <div class="stat-item stat-${stat.color}">
-              <div class="stat-label">${stat.label}</div>
-              <div class="stat-value">${stat.value}</div>
-            </div>
-          `).join('')}
-        </div>
-
-        <div class="stats-summary">
-          <div class="summary-item">
-            <span class="summary-label">Text Length:</span>
-            <span class="summary-value">${result.originalText.length} characters</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">Compression Ratio:</span>
-            <span class="summary-value">
-              ${((result.totalTokens / result.originalText.length) * 100).toFixed(1)}%
-            </span>
-          </div>
-        </div>
-      </div>
-    `;
+    tokenStats.innerHTML = UIRenderer.renderTokenStats(result);
     tokenStats.style.display = 'block';
   }
 
@@ -766,18 +664,16 @@ class LanguageModelExplorer {
 
   setupEmbeddings() {
     this.setupEmbeddingsModelSelector();
-    this.setupEmbeddingsEventListeners();
-    this.setupNavigation();
+    this.eventManager.setupEmbeddingsEvents();
+    this.eventManager.setupNavigation();
     this.currentStep = 0;
     this.autoPlayInterval = null;
   }
 
   setupEmbeddingsModelSelector() {
-    const models = [
-      { id: 'gpt2', name: 'GPT-2', description: 'OpenAI GPT-2 (768D embeddings)' },
-      { id: 'bert-base-uncased', name: 'BERT Base', description: 'Google BERT (768D embeddings)' },
-      { id: 'roberta-base', name: 'RoBERTa Base', description: 'Facebook RoBERTa (768D embeddings)' }
-    ];
+    const models = ModelConfig.getModels().filter(model => 
+      model.embeddingDim === 768 // Only show models with 768D embeddings
+    );
 
     const modelSelector = document.getElementById('embeddingsModelSelector');
     if (!modelSelector) return;
@@ -795,11 +691,9 @@ class LanguageModelExplorer {
       </div>
     `).join('');
 
-    // Add click event listeners
-    modelSelector.querySelectorAll('.model-option').forEach(option => {
-      option.addEventListener('click', () => {
-        this.selectEmbeddingsModel(option.dataset.model);
-      });
+    // Use EventManager for model selection
+    this.eventManager.setupModelSelector('embeddingsModelSelector', (modelId) => {
+      this.selectEmbeddingsModel(modelId);
     });
   }
 
@@ -825,54 +719,9 @@ class LanguageModelExplorer {
     }
   }
 
-  setupEmbeddingsEventListeners() {
-    const exploreBtn = document.getElementById('exploreEmbeddingsBtn');
-    if (exploreBtn) {
-      exploreBtn.addEventListener('click', () => {
-        this.exploreEmbeddings();
-      });
-    }
+  // Event handling moved to EventManager
 
-    const inputText = document.getElementById('embeddings-input-text');
-    if (inputText) {
-      inputText.addEventListener('input', () => {
-        // Auto-explore after typing stops
-        clearTimeout(this.typingTimeout);
-        this.typingTimeout = setTimeout(() => {
-          if (inputText.value.trim()) {
-            this.exploreEmbeddings();
-          }
-        }, 500);
-      });
-    }
-
-    // Pipeline navigation
-    const prevBtn = document.getElementById('prevStep');
-    const nextBtn = document.getElementById('nextStep');
-    const autoPlayBtn = document.getElementById('autoPlay');
-
-    if (prevBtn) prevBtn.addEventListener('click', () => this.previousStep());
-    if (nextBtn) nextBtn.addEventListener('click', () => this.nextStep());
-    if (autoPlayBtn) autoPlayBtn.addEventListener('click', () => this.toggleAutoPlay());
-
-    // Step click handlers
-    document.querySelectorAll('.step').forEach(step => {
-      step.addEventListener('click', () => {
-        const stepName = step.dataset.step;
-        this.goToStep(stepName);
-      });
-    });
-  }
-
-  setupNavigation() {
-    const navBtns = document.querySelectorAll('.nav-btn');
-    navBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const page = btn.dataset.page;
-        this.switchPage(page);
-      });
-    });
-  }
+  // Navigation setup moved to EventManager
 
   switchPage(page) {
     // Update navigation buttons
@@ -958,16 +807,18 @@ class LanguageModelExplorer {
       const tokens = tokenizer.tokenize(text);
       console.log('Tokens generated:', tokens);
       
+      const modelType = ModelConfig.getModelType(this.currentModel);
+      
       // Generate dictionary embeddings first
-      const dictionaryEmbeddings = this.generateDictionaryEmbeddings(tokens);
+      const dictionaryEmbeddings = EmbeddingsService.generateDictionaryEmbeddings(tokens, modelType);
       console.log('Dictionary embeddings generated:', dictionaryEmbeddings.length);
       
       // Generate positional encoding
-      const positionalEncoding = this.generatePositionalEncoding(tokens.length);
+      const positionalEncoding = EmbeddingsService.generatePositionalEncoding(tokens.length, modelType);
       console.log('Positional encoding generated:', positionalEncoding.length);
       
-      // Now combine them (dictionaryEmbeddings and positionalEncoding are now available)
-      const finalEmbeddings = this.combineEmbeddings(tokens.length, dictionaryEmbeddings, positionalEncoding);
+      // Now combine them
+      const finalEmbeddings = EmbeddingsService.combineEmbeddings(tokens.length, dictionaryEmbeddings, positionalEncoding, modelType);
       console.log('Final embeddings generated:', finalEmbeddings.length);
       
       this.embeddingsData = {
@@ -984,61 +835,7 @@ class LanguageModelExplorer {
     }
   }
 
-  generateDictionaryEmbeddings(tokens) {
-    // Simulate dictionary embeddings (random for demo)
-    const embeddingDim = this.currentModel.includes('gpt') ? 768 : 768;
-    return tokens.map(token => {
-      const embedding = new Array(embeddingDim).fill(0).map(() => 
-        (Math.random() - 0.5) * 2
-      );
-      return {
-        token: token.text,
-        embedding,
-        magnitude: Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0))
-      };
-    });
-  }
-
-  generatePositionalEncoding(seqLength) {
-    const embeddingDim = 768;
-    const encoding = [];
-    
-    for (let pos = 0; pos < seqLength; pos++) {
-      const posEncoding = new Array(embeddingDim).fill(0).map((_, i) => {
-        if (i % 2 === 0) {
-          return Math.sin(pos / Math.pow(10000, i / embeddingDim));
-        } else {
-          return Math.cos(pos / Math.pow(10000, (i - 1) / embeddingDim));
-        }
-      });
-      encoding.push({
-        position: pos,
-        encoding: posEncoding,
-        magnitude: Math.sqrt(posEncoding.reduce((sum, val) => sum + val * val, 0))
-      });
-    }
-    
-    return encoding;
-  }
-
-  combineEmbeddings(seqLength, dictionaryEmbeddings, positionalEncoding) {
-    const embeddingDim = 768;
-    const combined = [];
-    
-    for (let pos = 0; pos < seqLength; pos++) {
-      const dictEmbedding = dictionaryEmbeddings[pos]?.embedding || new Array(embeddingDim).fill(0);
-      const posEncoding = positionalEncoding[pos]?.encoding || new Array(embeddingDim).fill(0);
-      
-      const combinedEmbedding = dictEmbedding.map((val, i) => val + posEncoding[i]);
-      combined.push({
-        position: pos,
-        embedding: combinedEmbedding,
-        magnitude: Math.sqrt(combinedEmbedding.reduce((sum, val) => sum + val * val, 0))
-      });
-    }
-    
-    return combined;
-  }
+  // Embeddings generation methods moved to EmbeddingsService
 
   goToStep(stepName) {
     const steps = ['tokens', 'dictionary', 'positional', 'final'];
@@ -2130,31 +1927,7 @@ class LanguageModelExplorer {
   }
 
   getMatrixColor(value) {
-    // Create a color gradient that better matches the teal/green theme
-    // Positive values: Teal to Green gradient
-    // Negative values: Light red to darker red (complementary to teal)
-    // Zero values: Neutral grey
-    
-    const intensity = Math.min(Math.abs(value) * 2, 1);
-    
-    if (value > 0) {
-      // Teal to Green gradient for positive values
-      if (intensity < 0.5) {
-        return `rgba(20, 184, 166, ${intensity + 0.3})`; // Light teal
-      } else {
-        return `rgba(16, 185, 129, ${intensity + 0.3})`; // Green
-      }
-    } else if (value < 0) {
-      // Light red to darker red for negative values (complementary to teal)
-      if (intensity < 0.5) {
-        return `rgba(239, 68, 68, ${intensity + 0.3})`; // Light red
-      } else {
-        return `rgba(185, 28, 28, ${intensity + 0.3})`; // Darker red
-      }
-    } else {
-      // Neutral grey for zero values
-      return 'rgba(156, 163, 175, 0.4)';
-    }
+    return EmbeddingsService.getMatrixColor(value);
   }
 
   previousStep() {
