@@ -1128,6 +1128,36 @@ class LanguageModelExplorer {
         <p class="dictionary-subtitle">How tokens get converted to 768-dimensional vectors via the embedding dictionary</p>
       </div>
       
+      <!-- Instructional Carousel at Top -->
+      <div class="instructional-carousel">
+        <div class="carousel-item active">
+          <h6>🔤 Input Tokens</h6>
+          <p>Each word or subword becomes a unique token ID that gets looked up in the embedding dictionary.</p>
+        </div>
+        <div class="carousel-item">
+          <h6>📚 Embedding Dictionary</h6>
+          <p>Pre-trained lookup table with ~50,000 token vectors, each 768 dimensions. Total parameters: ~38M.</p>
+        </div>
+        <div class="carousel-item">
+          <h6>🔍 Vector Lookup</h6>
+          <p>Each token ID retrieves its corresponding 768D vector from the dictionary table.</p>
+        </div>
+        <div class="carousel-item">
+          <h6>📊 Output Embeddings</h6>
+          <p>The resulting matrix shows each token's embedding vector with color-coded values.</p>
+        </div>
+        <div class="carousel-nav">
+          <button class="carousel-btn prev">‹</button>
+          <div class="carousel-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+            <span class="dot" data-index="2"></span>
+            <span class="dot" data-index="3"></span>
+          </div>
+          <button class="carousel-btn next">›</button>
+        </div>
+      </div>
+      
       <div class="dictionary-visualization">
         <!-- Input Tokens -->
         <div class="tokens-section">
@@ -1139,17 +1169,6 @@ class LanguageModelExplorer {
                 <span class="token-id">#${index}</span>
               </div>
             `).join('')}
-          </div>
-        </div>
-        
-        <!-- Dictionary Info -->
-        <div class="dictionary-info-section">
-          <h6>Embedding Dictionary</h6>
-          <p>Pre-trained lookup table with ~50,000 token vectors</p>
-          <div class="dictionary-stats">
-            <span class="stat">Vocab: 50K tokens</span>
-            <span class="stat">Dimensions: 768</span>
-            <span class="stat">Parameters: 38M</span>
           </div>
         </div>
         
@@ -1170,34 +1189,38 @@ class LanguageModelExplorer {
             
             <!-- Matrix Rows -->
             <div class="matrix-rows">
-              ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => `
-                <div class="matrix-row" data-token-index="${tokenIndex}">
-                  <div class="row-label">
-                    <span class="token-name">${embedding.token}</span>
-                    <span class="token-position">Pos ${tokenIndex}</span>
-                  </div>
-                  <div class="embedding-values">
-                    ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
-                      const color = this.getMatrixColor(value);
-                      const intensity = Math.min(Math.abs(value) * 2, 1);
-                      return `
-                        <div class="embedding-cell" 
-                             data-token-index="${tokenIndex}" 
-                             data-dim-index="${dimIndex}"
-                             style="background-color: ${color}; opacity: ${intensity + 0.3}">
-                          <span class="cell-value">${value.toFixed(2)}</span>
-                          <div class="cell-tooltip">
-                            Token: ${embedding.token}<br>
-                            Position: ${tokenIndex}<br>
-                            Dimension: ${dimIndex}<br>
-                            Value: ${value.toFixed(4)}
+              ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => {
+                const magnitude = embedding.magnitude;
+                return `
+                  <div class="matrix-row" data-token-index="${tokenIndex}">
+                    <div class="row-label">
+                      <span class="token-name">${embedding.token}</span>
+                      <span class="token-position">Pos ${tokenIndex}</span>
+                      <span class="vector-magnitude" style="display: none;">${magnitude.toFixed(3)}</span>
+                    </div>
+                    <div class="embedding-values">
+                      ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
+                        const color = this.getMatrixColor(value);
+                        const intensity = Math.min(Math.abs(value) * 2, 1);
+                        return `
+                          <div class="embedding-cell" 
+                               data-token-index="${tokenIndex}" 
+                               data-dim-index="${dimIndex}"
+                               style="background-color: ${color}; opacity: ${intensity + 0.3}">
+                            <span class="cell-value">${value.toFixed(2)}</span>
+                            <div class="cell-tooltip">
+                              Token: ${embedding.token}<br>
+                              Position: ${tokenIndex}<br>
+                              Dimension: ${dimIndex}<br>
+                              Value: ${value.toFixed(4)}
+                            </div>
                           </div>
-                        </div>
-                      `;
-                    }).join('')}
+                        `;
+                      }).join('')}
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
         </div>
@@ -1334,7 +1357,6 @@ class LanguageModelExplorer {
     // Control checkboxes
     const showValues = document.getElementById('showValues');
     const showMagnitudes = document.getElementById('showMagnitudes');
-    const compareTokens = document.getElementById('compareTokens');
 
     if (showValues) {
       showValues.addEventListener('change', () => {
@@ -1348,11 +1370,70 @@ class LanguageModelExplorer {
       });
     }
 
-    if (compareTokens) {
-      compareTokens.addEventListener('change', () => {
-        this.toggleTokenComparison();
+    // Carousel functionality
+    this.setupCarousel();
+  }
+
+  setupCarousel() {
+    const carousel = document.querySelector('.instructional-carousel');
+    if (!carousel) return;
+
+    const items = carousel.querySelectorAll('.carousel-item');
+    const dots = carousel.querySelectorAll('.dot');
+    const prevBtn = carousel.querySelector('.carousel-btn.prev');
+    const nextBtn = carousel.querySelector('.carousel-btn.next');
+    
+    let currentIndex = 0;
+
+    const showItem = (index) => {
+      items.forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+      currentIndex = index;
+    };
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        const newIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+        showItem(newIndex);
       });
     }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        const newIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+        showItem(newIndex);
+      });
+    }
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        showItem(index);
+      });
+    });
+
+    // Auto-advance carousel
+    setInterval(() => {
+      const newIndex = (currentIndex + 1) % items.length;
+      showItem(newIndex);
+    }, 4000);
+  }
+
+  toggleMagnitudeDisplay() {
+    const isEnabled = document.getElementById('showMagnitudes')?.checked;
+    document.querySelectorAll('.vector-magnitude').forEach(magnitude => {
+      magnitude.style.display = isEnabled ? 'block' : 'none';
+    });
+  }
+
+  toggleValueDisplay() {
+    const isEnabled = document.getElementById('showValues')?.checked;
+    document.querySelectorAll('.cell-value').forEach(value => {
+      value.style.display = isEnabled ? 'block' : 'none';
+    });
   }
 
   highlightTokenEmbedding(tokenIndex) {
@@ -1369,12 +1450,6 @@ class LanguageModelExplorer {
     const matrixRow = document.querySelector(`.matrix-row[data-token-index="${tokenIndex}"]`);
     if (matrixRow) {
       matrixRow.classList.add('highlighted');
-    }
-    
-    // Highlight the lookup arrow
-    const lookupArrow = document.querySelector(`.lookup-arrow[data-token-index="${tokenIndex}"]`);
-    if (lookupArrow) {
-      lookupArrow.classList.add('highlighted');
     }
   }
 
@@ -1400,20 +1475,6 @@ class LanguageModelExplorer {
   clearHighlights() {
     document.querySelectorAll('.highlighted, .cell-highlighted, .dimension-highlighted').forEach(el => {
       el.classList.remove('highlighted', 'cell-highlighted', 'dimension-highlighted');
-    });
-  }
-
-  toggleValueDisplay() {
-    const isEnabled = document.getElementById('showValues')?.checked;
-    document.querySelectorAll('.cell-value').forEach(value => {
-      value.style.display = isEnabled ? 'block' : 'none';
-    });
-  }
-
-  toggleMagnitudeDisplay() {
-    const isEnabled = document.getElementById('showMagnitudes')?.checked;
-    document.querySelectorAll('.cell-magnitude').forEach(magnitude => {
-      magnitude.style.display = isEnabled ? 'block' : 'none';
     });
   }
 
@@ -1473,7 +1534,7 @@ class LanguageModelExplorer {
     let heatmap = `
       <div class="positional-header">
         <h5>Positional Encoding Visualization</h5>
-        <p class="positional-subtitle">How position information is added to each token</p>
+        <p class="positional-subtitle">How position information is added to each token using sine/cosine functions</p>
       </div>
       
       <div class="positional-content">
@@ -1507,7 +1568,8 @@ class LanguageModelExplorer {
                          data-position="${pos}" 
                          data-dimension="${dim}"
                          style="background-color: ${color}; opacity: ${intensity + 0.3}"
-                         title="Position ${pos}, Dimension ${dim}: ${value.toFixed(3)}">
+                         title="Position ${pos}, Dimension ${dim}: ${value.toFixed(4)}">
+                      <span class="heatmap-value">${value.toFixed(3)}</span>
                     </div>
                   `;
                 }).join('')}
