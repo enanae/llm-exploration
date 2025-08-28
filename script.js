@@ -1,7 +1,5 @@
 // Language Model Explorer - Main JavaScript
 
-import { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService } from './utils.js';
-
 class LanguageModelExplorer {
   constructor() {
     this.currentModel = 'gpt2';
