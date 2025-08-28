@@ -482,115 +482,11 @@ class LanguageModelExplorer {
     this.setupTokenInteractions();
   }
 
-  renderFlowView(result) {
-    return `
-      <div class="flow-view">
-        <div class="token-flow">
-          ${result.tokens.map((token, index) => `
-            <div class="token-item ${this.selectedToken === index ? 'selected' : ''}"
-                 data-token-index="${index}"
-                 style="
-                   background-color: ${this.getTokenBackground(token, index)};
-                   border-color: ${this.getTokenColor(token, index)};
-                 ">
-              <div class="token-text">${token.text}</div>
-              <div class="token-meta">
-                <span class="token-id">#${token.id}</span>
-                <span class="token-type">${token.type}</span>
-                ${token.subword ? '<span class="subword-indicator">🔗</span>' : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
+  // Token rendering methods moved to UIRenderer
 
-  renderGridView(result) {
-    return `
-      <div class="grid-view">
-        <div class="token-grid">
-          ${result.tokens.map((token, index) => `
-            <div class="token-card ${this.selectedToken === index ? 'selected' : ''}"
-                 data-token-index="${index}"
-                 style="
-                   background-color: ${this.getTokenBackground(token, index)};
-                   border-color: ${this.getTokenColor(token, index)};
-                 ">
-              <div class="token-header">
-                <span class="token-id">#${token.id}</span>
-                <span class="token-type">${token.type}</span>
-              </div>
-              <div class="token-content">
-                <div class="token-text">${token.text}</div>
-                <div class="token-length">${token.length} chars</div>
-              </div>
-              ${token.subword ? '<div class="subword-badge">Subword</div>' : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
+  // Token color method moved to UIRenderer
 
-  renderTokenDetails(result) {
-    if (this.selectedToken === null || !result.tokens[this.selectedToken]) return '';
-    
-    const token = result.tokens[this.selectedToken];
-    return `
-      <div class="token-details">
-        <h4 class="details-title">Token Details</h4>
-        <div class="details-content">
-          <div class="detail-row">
-            <span class="detail-label">Text:</span>
-            <span class="detail-value">"${token.text}"</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Position:</span>
-            <span class="detail-value">${token.start} - ${token.end}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Type:</span>
-            <span class="detail-value">${token.type}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Length:</span>
-            <span class="detail-value">${token.length} characters</span>
-          </div>
-          ${token.subword ? `
-            <div class="detail-row">
-              <span class="detail-label">Subword of:</span>
-              <span class="detail-value">${token.parentWord || 'Unknown'}</span>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  getTokenColor(token, index) {
-    if (this.selectedToken === index) return 'var(--teal)';
-    
-    const colors = [
-      'var(--light-teal)',
-      'var(--light-green)', 
-      'var(--green)',
-      'var(--teal)'
-    ];
-    return colors[index % colors.length];
-  }
-
-  getTokenBackground(token, index) {
-    if (this.selectedToken === index) return 'rgba(13, 148, 136, 0.1)';
-    
-    const backgrounds = [
-      'rgba(20, 184, 166, 0.1)',
-      'rgba(16, 185, 129, 0.1)',
-      'rgba(5, 150, 105, 0.1)',
-      'rgba(13, 148, 136, 0.1)'
-    ];
-    return backgrounds[index % backgrounds.length];
-  }
+  // Token background method moved to UIRenderer
 
   setupTokenInteractions() {
     // Add click and hover events to tokens
