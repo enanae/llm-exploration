@@ -1129,69 +1129,46 @@ class LanguageModelExplorer {
       </div>
       
       <div class="dictionary-visualization">
-        <!-- Step 1: Input Tokens -->
-        <div class="step-section">
-          <div class="step-title">
-            <span class="step-number">1</span>
-            <h6>Input Tokens</h6>
-          </div>
-          <div class="tokens-row">
-            <div class="tokens-display">
-              ${tokens.slice(0, maxTokens).map((token, index) => `
-                <div class="token-badge" data-token-index="${index}">
-                  <span class="token-text">${token.text}</span>
-                  <span class="token-id">#${index}</span>
-                </div>
-              `).join('')}
-            </div>
+        <!-- Input Tokens -->
+        <div class="tokens-section">
+          <h6>Input Tokens</h6>
+          <div class="tokens-display">
+            ${tokens.slice(0, maxTokens).map((token, index) => `
+              <div class="token-badge" data-token-index="${index}">
+                <span class="token-text">${token.text}</span>
+                <span class="token-id">#${index}</span>
+              </div>
+            `).join('')}
           </div>
         </div>
         
-        <!-- Step 2: Dictionary Lookup -->
-        <div class="step-section">
-          <div class="step-title">
-            <span class="step-number">2</span>
-            <h6>Dictionary Lookup</h6>
-          </div>
-          <div class="lookup-process">
-            <div class="lookup-arrows">
-              ${tokens.slice(0, maxTokens).map((_, index) => `
-                <div class="lookup-arrow" data-token-index="${index}">
-                  <span class="arrow-symbol">↓</span>
-                  <span class="arrow-label">Lookup</span>
-                </div>
-              `).join('')}
-            </div>
-            <div class="dictionary-info">
-              <div class="dictionary-card">
-                <h6>Embedding Dictionary</h6>
-                <p>Pre-trained lookup table with ~50,000 token vectors</p>
-                <div class="dictionary-stats">
-                  <span class="stat">Vocab: 50K tokens</span>
-                  <span class="stat">Dimensions: 768</span>
-                  <span class="stat">Parameters: 38M</span>
-                </div>
-              </div>
-            </div>
+        <!-- Dictionary Info -->
+        <div class="dictionary-info-section">
+          <h6>Embedding Dictionary</h6>
+          <p>Pre-trained lookup table with ~50,000 token vectors</p>
+          <div class="dictionary-stats">
+            <span class="stat">Vocab: 50K tokens</span>
+            <span class="stat">Dimensions: 768</span>
+            <span class="stat">Parameters: 38M</span>
           </div>
         </div>
         
-        <!-- Step 3: Output Embeddings -->
-        <div class="step-section">
-          <div class="step-title">
-            <span class="step-number">3</span>
-            <h6>Output Embeddings</h6>
+        <!-- Embeddings Matrix -->
+        <div class="embeddings-matrix">
+          <div class="matrix-header">
+            <span class="matrix-title">Resulting 768D Vectors</span>
           </div>
-          <div class="embeddings-matrix">
-            <div class="matrix-header">
-              <span class="matrix-title">Resulting 768D Vectors</span>
-              <div class="dimension-labels">
-                ${Array.from({length: maxDim}, (_, i) => `
-                  <span class="dim-label" title="Dimension ${i}">${i}</span>
-                `).join('')}
-              </div>
+          
+          <div class="matrix-content">
+            <!-- Dimension Labels Row -->
+            <div class="dimension-labels-row">
+              <div class="label-spacer"></div>
+              ${Array.from({length: maxDim}, (_, i) => `
+                <div class="dim-label" title="Dimension ${i}">${i}</div>
+              `).join('')}
             </div>
             
+            <!-- Matrix Rows -->
             <div class="matrix-rows">
               ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => `
                 <div class="matrix-row" data-token-index="${tokenIndex}">
@@ -1237,12 +1214,6 @@ class LanguageModelExplorer {
           <label class="control-label">
             <input type="checkbox" id="showMagnitudes" class="control-checkbox">
             Show Vector Magnitudes
-          </label>
-        </div>
-        <div class="control-group">
-          <label class="control-label">
-            <input type="checkbox" id="compareTokens" class="control-checkbox">
-            Compare Token Similarities
           </label>
         </div>
       </div>

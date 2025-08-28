@@ -1226,54 +1226,20 @@ body {
   margin-bottom: 2rem;
 }
 
-/* Step Sections */
-.step-section {
+/* Tokens Section */
+.tokens-section {
   background: var(--white);
   border: 2px solid var(--light-grey);
   border-radius: 12px;
   padding: 1.5rem;
-  transition: all 0.2s ease;
+  text-align: center;
 }
 
-.step-section:hover {
-  border-color: var(--teal);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
-}
-
-.step-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--light-grey);
-}
-
-.step-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--teal);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.step-title h6 {
+.tokens-section h6 {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--dark-grey);
-  margin: 0;
-}
-
-/* Tokens Row */
-.tokens-row {
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .tokens-display {
@@ -1310,11 +1276,6 @@ body {
   transform: scale(1.05);
 }
 
-.token-badge.dimension-highlighted {
-  background: var(--green);
-  border-color: var(--teal);
-}
-
 .token-text {
   font-weight: 600;
   font-size: 0.95rem;
@@ -1325,68 +1286,23 @@ body {
   opacity: 0.8;
 }
 
-/* Lookup Process */
-.lookup-process {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  justify-content: center;
-}
-
-.lookup-arrows {
-  display: flex;
-  gap: 1.5rem;
-  padding: 1rem;
-}
-
-.lookup-arrow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.lookup-arrow.highlighted {
-  transform: scale(1.2);
-}
-
-.arrow-symbol {
-  font-size: 1.5rem;
-  color: var(--teal);
-  font-weight: bold;
-}
-
-.arrow-label {
-  font-size: 0.75rem;
-  color: var(--grey);
-  font-weight: 500;
-}
-
-/* Dictionary Info */
-.dictionary-info {
-  flex-shrink: 0;
-}
-
-.dictionary-card {
-  background: var(--light-grey);
-  border: 2px solid var(--teal);
-  border-radius: 8px;
+/* Dictionary Info Section */
+.dictionary-info-section {
+  background: var(--white);
+  border: 2px solid var(--light-grey);
+  border-radius: 12px;
   padding: 1.5rem;
   text-align: center;
-  min-width: 200px;
 }
 
-.dictionary-card h6 {
-  font-size: 1rem;
+.dictionary-info-section h6 {
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--dark-grey);
   margin-bottom: 0.75rem;
 }
 
-.dictionary-card p {
+.dictionary-info-section p {
   color: var(--grey);
   font-size: 0.9rem;
   margin-bottom: 1rem;
@@ -1394,14 +1310,15 @@ body {
 
 .dictionary-stats {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .dictionary-stats .stat {
-  background: var(--white);
-  padding: 0.5rem;
-  border-radius: 4px;
+  background: var(--light-grey);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--dark-grey);
@@ -1417,9 +1334,6 @@ body {
 }
 
 .matrix-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 1rem 1.5rem;
   background: var(--light-grey);
   border-bottom: 1px solid var(--grey);
@@ -1431,9 +1345,16 @@ body {
   font-size: 1rem;
 }
 
-.dimension-labels {
+.matrix-content {
+  padding: 1rem 1.5rem;
+}
+
+/* Dimension Labels Row */
+.dimension-labels-row {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-left: 140px; /* Match the row-label width */
 }
 
 .dim-label {
@@ -1445,48 +1366,38 @@ body {
   font-size: 0.7rem;
   font-weight: 500;
   color: var(--dark-grey);
-  background: var(--white);
-  border: 1px solid var(--light-grey);
+  background: var(--light-grey);
+  border: 1px solid var(--grey);
   border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dim-label.dimension-highlighted {
-  background: var(--green);
-  color: var(--white);
-  border-color: var(--teal);
+  margin-right: 2px;
 }
 
 /* Matrix Rows */
 .matrix-rows {
-  max-height: 400px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .matrix-row {
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--light-grey);
+  padding: 0.75rem 0;
   transition: all 0.2s ease;
-}
-
-.matrix-row:last-child {
-  border-bottom: none;
 }
 
 .matrix-row.highlighted {
   background: rgba(13, 148, 136, 0.1);
-  border-left: 4px solid var(--teal);
+  border-radius: 4px;
 }
 
 .row-label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 140px;
-  margin-right: 1.5rem;
+  width: 140px;
+  flex-shrink: 0;
+  padding-right: 1rem;
 }
 
 .token-name {
@@ -1503,7 +1414,6 @@ body {
 .embedding-values {
   display: flex;
   gap: 2px;
-  flex-wrap: wrap;
   flex: 1;
 }
 
@@ -1731,39 +1641,27 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .step-section {
+  .tokens-section,
+  .dictionary-info-section {
     padding: 1rem;
   }
   
-  .step-title {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
-  }
-  
-  .lookup-process {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .lookup-arrows {
-    flex-wrap: wrap;
+  .tokens-display {
     justify-content: center;
   }
   
-  .dictionary-card {
-    min-width: auto;
-    width: 100%;
-  }
-  
-  .matrix-header {
+  .dictionary-stats {
     flex-direction: column;
-    gap: 0.75rem;
-    align-items: flex-start;
+    gap: 0.5rem;
   }
   
-  .dimension-labels {
-    flex-wrap: wrap;
+  .matrix-content {
+    padding: 0.5rem;
+  }
+  
+  .dimension-labels-row {
+    padding-left: 0;
+    justify-content: center;
   }
   
   .matrix-row {
@@ -1773,8 +1671,8 @@ body {
   }
   
   .row-label {
-    min-width: auto;
-    margin-right: 0;
+    width: auto;
+    padding-right: 0;
   }
   
   .embedding-values {
@@ -1785,10 +1683,5 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-  }
-  
-  .explanation-step {
-    flex-direction: column;
-    text-align: center;
   }
 }
