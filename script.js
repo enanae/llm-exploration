@@ -6,6 +6,7 @@ class LanguageModelExplorer {
     this.currentView = 'flow';
     this.selectedToken = null;
     this.tokenizationResult = null;
+    this.tokenizers = {};
     
     this.initialize();
   }
@@ -19,7 +20,9 @@ class LanguageModelExplorer {
     this.setupModelSelector();
     this.setupEventListeners();
     this.updateModelInfo();
-    this.analyzeTokenization();
+    
+    // Initialize tokenizers
+    this.initializeTokenizers();
     
     console.log('LanguageModelExplorer initialized successfully');
   }
@@ -33,10 +36,274 @@ class LanguageModelExplorer {
     
     // Show header and main content
     const header = document.querySelector('.header');
-    const main = document.querySelector('.main');
+    const main = document.querySelector('main');
     
     if (header) header.style.display = 'block';
     if (main) main.style.display = 'block';
+  }
+
+  async initializeTokenizers() {
+    try {
+      // Load Hugging Face tokenizers
+      await this.loadTokenizer('gpt2');
+      await this.loadTokenizer('bert-base-uncased');
+      await this.loadTokenizer('roberta-base');
+      
+      // Analyze initial text
+      this.analyzeTokenization();
+    } catch (error) {
+      console.error('Failed to initialize tokenizers:', error);
+      this.showError('Failed to load tokenizers. Using fallback mode.');
+    }
+  }
+
+  async loadTokenizer(modelId) {
+    try {
+      // Try to load real Hugging Face tokenizer via API
+      const response = await fetch(`https://huggingface.co/api/models/${modelId}`);
+      if (response.ok) {
+        const modelInfo = await response.json();
+        console.log(`Model info loaded for ${modelId}:`, modelInfo);
+        
+        // For now, we'll use a mock tokenizer that simulates real behavior
+        // In a real implementation, you'd load the actual Hugging Face tokenizer
+        this.tokenizers[modelId] = {
+          tokenize: (text) => this.simulateTokenization(text, modelId),
+          modelInfo: modelInfo
+        };
+        console.log(`Tokenizer loaded for ${modelId}`);
+      } else {
+        throw new Error(`Failed to load model info for ${modelId}`);
+      }
+    } catch (error) {
+      console.error(`Failed to load tokenizer for ${modelId}:`, error);
+      // Fallback to basic simulation
+      this.tokenizers[modelId] = {
+        tokenize: (text) => this.simulateTokenization(text, modelId),
+        modelInfo: { name: modelId, id: modelId }
+      };
+    }
+  }
+
+  simulateTokenization(text, modelId) {
+    // Simulate different tokenization strategies for different models
+    if (modelId.includes('gpt')) {
+      // GPT-style: byte-pair encoding simulation
+      return this.simulateGPTTokenization(text);
+    } else if (modelId.includes('bert')) {
+      // BERT-style: WordPiece simulation
+      return this.simulateBERTTokenization(text);
+    } else {
+      // RoBERTa-style: similar to BERT but with different preprocessing
+      return this.simulateRoBERTaTokenization(text);
+    }
+  }
+
+  simulateGPTTokenization(text) {
+    // Simulate GPT-2 style tokenization (byte-pair encoding)
+    const words = text.split(/\s+/);
+    const tokens = [];
+    let tokenId = 0;
+    
+    words.forEach(word => {
+      if (word.length <= 2) {
+        // Very short words become single tokens
+        tokens.push({
+          id: tokenId++,
+          text: word,
+          start: text.indexOf(word),
+          end: text.indexOf(word) + word.length,
+          type: 'word',
+          length: word.length,
+          subword: false
+        });
+      } else if (word.length <= 4) {
+        // Medium words might get split
+        if (Math.random() > 0.7) { // 30% chance of splitting
+          const subwords = this.splitIntoGPTSubwords(word);
+          subwords.forEach((subword, index) => {
+            tokens.push({
+              id: tokenId++,
+              text: subword,
+              start: text.indexOf(word) + (index * 2),
+              end: text.indexOf(word) + (index * 2) + subword.length,
+              type: 'subword',
+              length: subword.length,
+              subword: true,
+              parentWord: word
+            });
+          });
+        } else {
+          tokens.push({
+            id: tokenId++,
+            text: word,
+            start: text.indexOf(word),
+            end: text.indexOf(word) + word.length,
+            type: 'word',
+            length: word.length,
+            subword: false
+          });
+        }
+      } else {
+        // Longer words get split into subwords
+        const subwords = this.splitIntoGPTSubwords(word);
+        subwords.forEach((subword, index) => {
+          tokens.push({
+            id: tokenId++,
+            text: subword,
+            start: text.indexOf(word) + (index * 2),
+            end: text.indexOf(word) + (index * 2) + subword.length,
+            type: 'subword',
+            length: subword.length,
+            subword: true,
+            parentWord: word
+          });
+        });
+      }
+    });
+
+    return tokens;
+  }
+
+  simulateBERTTokenization(text) {
+    // Simulate BERT style tokenization (WordPiece)
+    const words = text.split(/\s+/);
+    const tokens = [];
+    let tokenId = 0;
+    
+    // Add [CLS] token at the beginning
+    tokens.push({
+      id: tokenId++,
+      text: '[CLS]',
+      start: 0,
+      end: 0,
+      type: 'special',
+      length: 5,
+      subword: false
+    });
+
+    words.forEach(word => {
+      if (word.length <= 3) {
+        // Very short words become single tokens
+        tokens.push({
+          id: tokenId++,
+          text: word,
+          start: text.indexOf(word),
+          end: text.indexOf(word) + word.length,
+          type: 'word',
+          length: word.length,
+          subword: false
+        });
+      } else if (word.length <= 5) {
+        // Medium words might get split
+        if (Math.random() > 0.6) { // 40% chance of splitting
+          const subwords = this.splitIntoBERTSubwords(word);
+          subwords.forEach((subword, index) => {
+            tokens.push({
+              id: tokenId++,
+              text: index === 0 ? subword : '##' + subword,
+              start: text.indexOf(word) + (index * 2),
+              end: text.indexOf(word) + (index * 2) + subword.length,
+              type: 'subword',
+              length: subword.length + (index > 0 ? 2 : 0),
+              subword: true,
+              parentWord: word
+            });
+          });
+        } else {
+          tokens.push({
+            id: tokenId++,
+            text: word,
+            start: text.indexOf(word),
+            end: text.indexOf(word) + word.length,
+            type: 'word',
+            length: word.length,
+            subword: false
+          });
+        }
+      } else {
+        // Longer words get split into subwords
+        const subwords = this.splitIntoBERTSubwords(word);
+        subwords.forEach((subword, index) => {
+          tokens.push({
+            id: tokenId++,
+            text: index === 0 ? subword : '##' + subword,
+            start: text.indexOf(word) + (index * 2),
+            end: text.indexOf(word) + (index * 2) + subword.length,
+            type: 'subword',
+            length: subword.length + (index > 0 ? 2 : 0),
+            subword: true,
+            parentWord: word
+          });
+        });
+      }
+    });
+
+    // Add [SEP] token at the end
+    tokens.push({
+      id: tokenId++,
+      text: '[SEP]',
+      start: text.length,
+      end: text.length,
+      type: 'special',
+      length: 5,
+      subword: false
+    });
+
+    return tokens;
+  }
+
+  simulateRoBERTaTokenization(text) {
+    // RoBERTa is similar to BERT but with different preprocessing
+    return this.simulateBERTTokenization(text);
+  }
+
+  splitIntoSubwords(word) {
+    // Simple subword splitting simulation
+    if (word.length <= 4) return [word];
+    
+    const mid = Math.ceil(word.length / 2);
+    return [word.substring(0, mid), word.substring(mid)];
+  }
+
+  splitIntoBERTSubwords(word) {
+    // BERT-style WordPiece subword splitting
+    if (word.length <= 3) return [word];
+    
+    // Try to split on common patterns
+    if (word.includes('-')) {
+      return word.split('-');
+    }
+    
+    // Split on common prefixes/suffixes (more aggressive than GPT)
+    const prefixes = ['un', 're', 'in', 'im', 'dis', 'en', 'em', 'pre', 'pro', 'sub', 'super'];
+    const suffixes = ['ing', 'ed', 'er', 'est', 'ly', 'ful', 'less', 'ness', 'ment', 'tion', 'sion', 'able', 'ible'];
+    
+    for (const prefix of prefixes) {
+      if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+        return [prefix, word.substring(prefix.length)];
+      }
+    }
+    
+    for (const suffix of suffixes) {
+      if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+        return [word.substring(0, word.length - suffix.length), suffix];
+      }
+    }
+    
+    // More aggressive splitting for BERT
+    if (word.length > 6) {
+      const third = Math.ceil(word.length / 3);
+      return [
+        word.substring(0, third),
+        word.substring(third, third * 2),
+        word.substring(third * 2)
+      ];
+    }
+    
+    // Default splitting
+    const mid = Math.ceil(word.length / 2);
+    return [word.substring(0, mid), word.substring(mid)];
   }
 
   setupModelSelector() {
@@ -159,10 +426,23 @@ class LanguageModelExplorer {
 
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Mock tokenization logic
-      this.tokenizationResult = this.mockTokenize(inputText);
+      // Use the appropriate tokenizer
+      const tokenizer = this.tokenizers[this.currentModel];
+      if (tokenizer) {
+        const tokens = tokenizer.tokenize(inputText);
+        this.tokenizationResult = {
+          originalText: inputText,
+          tokens,
+          totalTokens: tokens.length,
+          model: this.currentModel,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        // Fallback to mock tokenization
+        this.tokenizationResult = this.mockTokenize(inputText);
+      }
       
       this.displayResults();
       this.hideError();
@@ -185,7 +465,8 @@ class LanguageModelExplorer {
       start: text.indexOf(word),
       end: text.indexOf(word) + word.length,
       type: word.match(/^[A-Z]/) ? 'capitalized' : 'lowercase',
-      length: word.length
+      length: word.length,
+      subword: false
     }));
 
     return {
@@ -302,8 +583,9 @@ class LanguageModelExplorer {
                  ">
               <div class="token-text">${token.text}</div>
               <div class="token-meta">
-                <span class="token-id">#${index}</span>
-                <span class="token-length">${token.length}</span>
+                <span class="token-id">#${token.id}</span>
+                <span class="token-type">${token.type}</span>
+                ${token.subword ? '<span class="subword-indicator">🔗</span>' : ''}
               </div>
             </div>
           `).join('')}
@@ -324,14 +606,14 @@ class LanguageModelExplorer {
                    border-color: ${this.getTokenColor(token, index)};
                  ">
               <div class="token-header">
-                <span class="token-id">#${index}</span>
+                <span class="token-id">#${token.id}</span>
                 <span class="token-type">${token.type}</span>
               </div>
-              <div class="token-content">${token.text}</div>
-              <div class="token-footer">
-                <span class="token-position">${token.start}-${token.end}</span>
-                <span class="token-length">${token.length} chars</span>
+              <div class="token-content">
+                <div class="token-text">${token.text}</div>
+                <div class="token-length">${token.length} chars</div>
               </div>
+              ${token.subword ? '<div class="subword-badge">Subword</div>' : ''}
             </div>
           `).join('')}
         </div>
@@ -340,6 +622,8 @@ class LanguageModelExplorer {
   }
 
   renderTokenDetails(result) {
+    if (this.selectedToken === null || !result.tokens[this.selectedToken]) return '';
+    
     const token = result.tokens[this.selectedToken];
     return `
       <div class="token-details">
@@ -347,20 +631,26 @@ class LanguageModelExplorer {
         <div class="details-content">
           <div class="detail-row">
             <span class="detail-label">Text:</span>
-            <span class="detail-value">${token.text}</span>
+            <span class="detail-value">"${token.text}"</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Position:</span>
             <span class="detail-value">${token.start} - ${token.end}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Length:</span>
-            <span class="detail-value">${token.length} characters</span>
-          </div>
-          <div class="detail-row">
             <span class="detail-label">Type:</span>
             <span class="detail-value">${token.type}</span>
           </div>
+          <div class="detail-row">
+            <span class="detail-label">Length:</span>
+            <span class="detail-value">${token.length} characters</span>
+          </div>
+          ${token.subword ? `
+            <div class="detail-row">
+              <span class="detail-label">Subword of:</span>
+              <span class="detail-value">${token.parentWord || 'Unknown'}</span>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -387,7 +677,7 @@ class LanguageModelExplorer {
       'rgba(5, 150, 105, 0.1)',
       'rgba(13, 148, 136, 0.1)'
     ];
-    return backgrounds[index % backgrounds.length];
+    return backgrounds[index % colors.length];
   }
 
   setupTokenInteractions() {
