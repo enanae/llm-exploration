@@ -706,21 +706,9 @@ header {
   border-color: var(--teal);
 }
 
-/* Flow View */
-.flow-view {
-  display: block;
-}
+  /* Duplicate flow-view styles removed - see Token Visualization section above */
 
-.flow-view.active {
-  display: block;
-}
-
-.token-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
+  /* Duplicate token-flow style removed - see Token Visualization section above */
 
   /* Duplicate styles removed - see Token Visualization section above */
 
