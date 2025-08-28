@@ -1229,20 +1229,20 @@ class LanguageModelExplorer {
       <div class="dictionary-controls">
         <div class="control-group">
           <label class="control-label">
-            <input type="checkbox" id="highlightDimensions" class="control-checkbox" checked>
-            Highlight Active Dimensions
-          </label>
-        </div>
-        <div class="control-group">
-          <label class="control-label">
             <input type="checkbox" id="showValues" class="control-checkbox" checked>
             Show Numerical Values
           </label>
         </div>
         <div class="control-group">
           <label class="control-label">
-            <input type="checkbox" id="animateLookup" class="control-checkbox">
-            Animate Lookup Process
+            <input type="checkbox" id="showMagnitudes" class="control-checkbox">
+            Show Vector Magnitudes
+          </label>
+        </div>
+        <div class="control-group">
+          <label class="control-label">
+            <input type="checkbox" id="compareTokens" class="control-checkbox">
+            Compare Token Similarities
           </label>
         </div>
       </div>
@@ -1359,15 +1359,9 @@ class LanguageModelExplorer {
     });
 
     // Control checkboxes
-    const highlightDimensions = document.getElementById('highlightDimensions');
     const showValues = document.getElementById('showValues');
-    const animateLookup = document.getElementById('animateLookup');
-
-    if (highlightDimensions) {
-      highlightDimensions.addEventListener('change', () => {
-        this.toggleDimensionHighlighting();
-      });
-    }
+    const showMagnitudes = document.getElementById('showMagnitudes');
+    const compareTokens = document.getElementById('compareTokens');
 
     if (showValues) {
       showValues.addEventListener('change', () => {
@@ -1375,9 +1369,15 @@ class LanguageModelExplorer {
       });
     }
 
-    if (animateLookup) {
-      animateLookup.addEventListener('change', () => {
-        this.toggleLookupAnimation();
+    if (showMagnitudes) {
+      showMagnitudes.addEventListener('change', () => {
+        this.toggleMagnitudeDisplay();
+      });
+    }
+
+    if (compareTokens) {
+      compareTokens.addEventListener('change', () => {
+        this.toggleTokenComparison();
       });
     }
   }
@@ -1430,17 +1430,6 @@ class LanguageModelExplorer {
     });
   }
 
-  toggleDimensionHighlighting() {
-    const isEnabled = document.getElementById('highlightDimensions')?.checked;
-    document.querySelectorAll('.embedding-cell').forEach(cell => {
-      if (isEnabled) {
-        cell.style.border = '1px solid var(--teal)';
-      } else {
-        cell.style.border = 'none';
-      }
-    });
-  }
-
   toggleValueDisplay() {
     const isEnabled = document.getElementById('showValues')?.checked;
     document.querySelectorAll('.cell-value').forEach(value => {
@@ -1448,29 +1437,36 @@ class LanguageModelExplorer {
     });
   }
 
-  toggleLookupAnimation() {
-    const isEnabled = document.getElementById('animateLookup')?.checked;
+  toggleMagnitudeDisplay() {
+    const isEnabled = document.getElementById('showMagnitudes')?.checked;
+    document.querySelectorAll('.cell-magnitude').forEach(magnitude => {
+      magnitude.style.display = isEnabled ? 'block' : 'none';
+    });
+  }
+
+  toggleTokenComparison() {
+    const isEnabled = document.getElementById('compareTokens')?.checked;
     if (isEnabled) {
-      this.startLookupAnimation();
+      this.startTokenComparison();
     } else {
-      this.stopLookupAnimation();
+      this.stopTokenComparison();
     }
   }
 
-  startLookupAnimation() {
+  startTokenComparison() {
     const tokens = document.querySelectorAll('.token-badge');
     let currentIndex = 0;
     
-    this.lookupAnimationInterval = setInterval(() => {
+    this.tokenComparisonInterval = setInterval(() => {
       this.highlightTokenEmbedding(currentIndex);
       currentIndex = (currentIndex + 1) % tokens.length;
     }, 1000);
   }
 
-  stopLookupAnimation() {
-    if (this.lookupAnimationInterval) {
-      clearInterval(this.lookupAnimationInterval);
-      this.lookupAnimationInterval = null;
+  stopTokenComparison() {
+    if (this.tokenComparisonInterval) {
+      clearInterval(this.tokenComparisonInterval);
+      this.tokenComparisonInterval = null;
       this.clearHighlights();
     }
   }

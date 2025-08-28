@@ -1222,31 +1222,65 @@ body {
 .dictionary-visualization {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
   margin-bottom: 2rem;
+}
+
+/* Step Sections */
+.step-section {
+  background: var(--white);
+  border: 2px solid var(--light-grey);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.step-section:hover {
+  border-color: var(--teal);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--light-grey);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.step-title h6 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dark-grey);
+  margin: 0;
 }
 
 /* Tokens Row */
 .tokens-row {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  justify-content: center;
   padding: 1rem;
-  background: var(--white);
-  border: 2px solid var(--light-grey);
-  border-radius: 12px;
-}
-
-.tokens-label {
-  font-weight: 600;
-  color: var(--dark-grey);
-  min-width: 100px;
 }
 
 .tokens-display {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .token-badge {
@@ -1254,14 +1288,15 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   background: var(--light-teal);
   border: 2px solid var(--teal);
   border-radius: 8px;
   color: var(--white);
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 60px;
+  min-width: 70px;
+  text-align: center;
 }
 
 .token-badge:hover {
@@ -1282,7 +1317,7 @@ body {
 
 .token-text {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .token-id {
@@ -1290,12 +1325,18 @@ body {
   opacity: 0.8;
 }
 
-/* Lookup Arrows */
+/* Lookup Process */
+.lookup-process {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  justify-content: center;
+}
+
 .lookup-arrows {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.5rem;
+  gap: 1.5rem;
+  padding: 1rem;
 }
 
 .lookup-arrow {
@@ -1324,6 +1365,49 @@ body {
   font-weight: 500;
 }
 
+/* Dictionary Info */
+.dictionary-info {
+  flex-shrink: 0;
+}
+
+.dictionary-card {
+  background: var(--light-grey);
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  min-width: 200px;
+}
+
+.dictionary-card h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dark-grey);
+  margin-bottom: 0.75rem;
+}
+
+.dictionary-card p {
+  color: var(--grey);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.dictionary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dictionary-stats .stat {
+  background: var(--white);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--dark-grey);
+  border: 1px solid var(--light-grey);
+}
+
 /* Embeddings Matrix */
 .embeddings-matrix {
   background: var(--white);
@@ -1336,7 +1420,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   background: var(--light-grey);
   border-bottom: 1px solid var(--grey);
 }
@@ -1344,6 +1428,7 @@ body {
 .matrix-title {
   font-weight: 600;
   color: var(--dark-grey);
+  font-size: 1rem;
 }
 
 .dimension-labels {
@@ -1382,7 +1467,7 @@ body {
 .matrix-row {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--light-grey);
   transition: all 0.2s ease;
 }
@@ -1400,8 +1485,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 120px;
-  margin-right: 1rem;
+  min-width: 140px;
+  margin-right: 1.5rem;
 }
 
 .token-name {
@@ -1419,6 +1504,7 @@ body {
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .embedding-cell {
@@ -1487,9 +1573,9 @@ body {
 /* Dictionary Controls */
 .dictionary-controls {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem;
   background: var(--light-grey);
   border-radius: 8px;
   flex-wrap: wrap;
@@ -1498,13 +1584,20 @@ body {
 .dictionary-controls .control-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .dictionary-controls .control-label {
   font-size: 0.9rem;
   color: var(--dark-grey);
   font-weight: 500;
+  cursor: pointer;
+}
+
+.dictionary-controls .control-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
 }
 
 /* Dictionary Details */
@@ -1638,23 +1731,29 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .tokens-row {
+  .step-section {
+    padding: 1rem;
+  }
+  
+  .step-title {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    text-align: center;
+    gap: 0.5rem;
   }
   
-  .tokens-label {
-    min-width: auto;
-  }
-  
-  .tokens-display {
-    justify-content: center;
+  .lookup-process {
+    flex-direction: column;
+    gap: 1rem;
   }
   
   .lookup-arrows {
     flex-wrap: wrap;
     justify-content: center;
+  }
+  
+  .dictionary-card {
+    min-width: auto;
+    width: 100%;
   }
   
   .matrix-header {
@@ -1685,6 +1784,7 @@ body {
   .dictionary-controls {
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
   }
   
   .explanation-step {
