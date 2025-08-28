@@ -1,6 +1,6 @@
 # Language Model Explorer
 
-An interactive website for exploring the internals of language models, with a focus on tokenization visualization. Built with React, TypeScript, and a modern design using white, grey, teal, and green color schemes.
+An interactive website for exploring the internals of language models, with a focus on tokenization visualization. Built as a static website using vanilla JavaScript, HTML, and CSS with a modern design using white, grey, teal, and green color schemes.
 
 ## Features
 
@@ -23,12 +23,15 @@ The application uses a carefully designed color palette:
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: GitHub Pages (Recommended)
 
-- Node.js (version 16 or higher)
-- npm or yarn
+1. Fork or clone this repository
+2. Go to your repository settings
+3. Enable GitHub Pages in the "Pages" section
+4. Select the branch you want to deploy (usually `main` or `master`)
+5. Your site will be available at `https://yourusername.github.io/repository-name`
 
-### Installation
+### Option 2: Local Development
 
 1. Clone the repository:
 ```bash
@@ -36,50 +39,44 @@ git clone <repository-url>
 cd language-model-explorer
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. Open `index.html` in your web browser
+   - You can use any local server (Python, Node.js, etc.)
+   - Or simply double-click the HTML file
 
-3. Start the development server:
-```bash
-npm run dev
-```
+### Option 3: Other Static Hosting
 
-4. Open your browser and navigate to `http://localhost:3000`
-
-### Building for Production
-
-```bash
-npm run build
-npm run preview
-```
+This website can be deployed on any static hosting service:
+- **Netlify**: Drag and drop the folder
+- **Vercel**: Connect your repository
+- **AWS S3**: Upload the files to an S3 bucket
+- **Any web server**: Upload the files to your server
 
 ## Project Structure
 
 ```
-src/
-├── components/          # React components
-│   ├── Header.tsx      # Application header
-│   ├── ModelSelector.tsx # Model selection interface
-│   ├── TokenizationExplorer.tsx # Main tokenization component
-│   ├── TokenizationControls.tsx # Tokenization parameters
-│   ├── TokenStats.tsx  # Tokenization statistics
-│   └── TokenVisualizer.tsx # Token visualization
-├── types/               # TypeScript type definitions
-│   └── tokenization.ts # Token and result types
-├── App.tsx             # Main application component
-├── main.tsx            # Application entry point
-└── index.css           # Global styles
+language-model-explorer/
+├── index.html          # Main HTML file
+├── styles.css          # All CSS styles
+├── script.js           # JavaScript functionality
+└── README.md           # This file
 ```
 
 ## Usage
 
 1. **Select a Model**: Choose from the available language models in the model selector
-2. **Input Text**: Enter or modify the text you want to analyze
-3. **Adjust Parameters**: Use the controls to modify tokenization behavior
-4. **Explore Tokens**: Switch between flow and grid views to explore the tokenization
-5. **Analyze Details**: Click on individual tokens to see detailed information
+2. **Input Text**: Enter or modify the sample text
+3. **Explore Tokens**: Switch between flow and grid views
+4. **Click Tokens**: Get detailed information about each token
+5. **Adjust Parameters**: Modify tokenization behavior
+
+## How It Works
+
+The website uses vanilla JavaScript to:
+- Dynamically generate the model selector interface
+- Process text input and create mock tokenization
+- Render interactive token visualizations
+- Handle user interactions and view switching
+- Display real-time statistics and analysis
 
 ## Future Enhancements
 
@@ -91,18 +88,25 @@ src/
 
 ## Technologies Used
 
-- **React 18**: Modern React with hooks
-- **TypeScript**: Type-safe development
-- **Vite**: Fast build tool and dev server
-- **CSS Grid/Flexbox**: Modern layout techniques
+- **HTML5**: Semantic markup
+- **CSS3**: Modern styling with Grid/Flexbox
+- **Vanilla JavaScript**: ES6+ features and modern APIs
 - **Responsive Design**: Mobile-first approach
+- **No build tools required**: Pure static files
+
+## Browser Support
+
+- Chrome 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Test in multiple browsers
 5. Submit a pull request
 
 ## License
@@ -112,5 +116,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - Hugging Face for open-source language models
-- The React and TypeScript communities
-- Modern web design principles and best practices
+- Modern web standards and best practices
+- The open-source community for inspiration
