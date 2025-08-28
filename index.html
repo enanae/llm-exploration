@@ -301,31 +301,7 @@
       </main>
     </div>
 
-    <script>
-      // Debug logging
-      console.log('HTML loaded, attempting to load JavaScript...');
-      
-      // Check if files exist
-      fetch('./styles.css')
-        .then(response => {
-          if (response.ok) {
-            console.log('CSS file found and loaded');
-          } else {
-            console.error('CSS file not found:', response.status);
-          }
-        })
-        .catch(error => console.error('Error loading CSS:', error));
-      
-      fetch('./script.js')
-        .then(response => {
-          if (response.ok) {
-            console.log('JavaScript file found and loaded');
-          } else {
-            console.error('JavaScript file not found:', response.status);
-          }
-        })
-        .catch(error => console.error('Error loading JavaScript:', error));
-    </script>
+    <script src="./utils.js"></script>
     <script src="./script.js"></script>
   </body>
 </html>
