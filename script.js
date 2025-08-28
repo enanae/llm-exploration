@@ -1124,71 +1124,104 @@ class LanguageModelExplorer {
     
     let matrix = `
       <div class="dictionary-header">
-        <h5>Token → Embedding Lookup Process</h5>
-        <p class="dictionary-subtitle">Each token gets converted to a 768-dimensional vector</p>
+        <h5>Token → Embedding Dictionary Lookup</h5>
+        <p class="dictionary-subtitle">How tokens get converted to 768-dimensional vectors via the embedding dictionary</p>
       </div>
       
       <div class="dictionary-visualization">
-        <div class="tokens-row">
-          <div class="tokens-label">Input Tokens:</div>
-          <div class="tokens-display">
-            ${tokens.slice(0, maxTokens).map((token, index) => `
-              <div class="token-badge" data-token-index="${index}">
-                <span class="token-text">${token.text}</span>
-                <span class="token-id">#${index}</span>
-              </div>
-            `).join('')}
+        <!-- Step 1: Input Tokens -->
+        <div class="step-section">
+          <div class="step-title">
+            <span class="step-number">1</span>
+            <h6>Input Tokens</h6>
           </div>
-        </div>
-        
-        <div class="lookup-arrows">
-          ${tokens.slice(0, maxTokens).map((_, index) => `
-            <div class="lookup-arrow" data-token-index="${index}">
-              <span class="arrow-symbol">↓</span>
-              <span class="arrow-label">Lookup</span>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="embeddings-matrix">
-          <div class="matrix-header">
-            <span class="matrix-title">Embedding Vectors (768 dimensions)</span>
-            <div class="dimension-labels">
-              ${Array.from({length: maxDim}, (_, i) => `
-                <span class="dim-label" title="Dimension ${i}">${i}</span>
+          <div class="tokens-row">
+            <div class="tokens-display">
+              ${tokens.slice(0, maxTokens).map((token, index) => `
+                <div class="token-badge" data-token-index="${index}">
+                  <span class="token-text">${token.text}</span>
+                  <span class="token-id">#${index}</span>
+                </div>
               `).join('')}
             </div>
           </div>
-          
-          <div class="matrix-rows">
-            ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => `
-              <div class="matrix-row" data-token-index="${tokenIndex}">
-                <div class="row-label">
-                  <span class="token-name">${embedding.token}</span>
-                  <span class="token-position">Pos ${tokenIndex}</span>
+        </div>
+        
+        <!-- Step 2: Dictionary Lookup -->
+        <div class="step-section">
+          <div class="step-title">
+            <span class="step-number">2</span>
+            <h6>Dictionary Lookup</h6>
+          </div>
+          <div class="lookup-process">
+            <div class="lookup-arrows">
+              ${tokens.slice(0, maxTokens).map((_, index) => `
+                <div class="lookup-arrow" data-token-index="${index}">
+                  <span class="arrow-symbol">↓</span>
+                  <span class="arrow-label">Lookup</span>
                 </div>
-                <div class="embedding-values">
-                  ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
-                    const color = this.getMatrixColor(value);
-                    const intensity = Math.min(Math.abs(value) * 2, 1);
-                    return `
-                      <div class="embedding-cell" 
-                           data-token-index="${tokenIndex}" 
-                           data-dim-index="${dimIndex}"
-                           style="background-color: ${color}; opacity: ${intensity + 0.3}">
-                        <span class="cell-value">${value.toFixed(2)}</span>
-                        <div class="cell-tooltip">
-                          Token: ${embedding.token}<br>
-                          Position: ${tokenIndex}<br>
-                          Dimension: ${dimIndex}<br>
-                          Value: ${value.toFixed(4)}
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
+              `).join('')}
+            </div>
+            <div class="dictionary-info">
+              <div class="dictionary-card">
+                <h6>Embedding Dictionary</h6>
+                <p>Pre-trained lookup table with ~50,000 token vectors</p>
+                <div class="dictionary-stats">
+                  <span class="stat">Vocab: 50K tokens</span>
+                  <span class="stat">Dimensions: 768</span>
+                  <span class="stat">Parameters: 38M</span>
                 </div>
               </div>
-            `).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Step 3: Output Embeddings -->
+        <div class="step-section">
+          <div class="step-title">
+            <span class="step-number">3</span>
+            <h6>Output Embeddings</h6>
+          </div>
+          <div class="embeddings-matrix">
+            <div class="matrix-header">
+              <span class="matrix-title">Resulting 768D Vectors</span>
+              <div class="dimension-labels">
+                ${Array.from({length: maxDim}, (_, i) => `
+                  <span class="dim-label" title="Dimension ${i}">${i}</span>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="matrix-rows">
+              ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => `
+                <div class="matrix-row" data-token-index="${tokenIndex}">
+                  <div class="row-label">
+                    <span class="token-name">${embedding.token}</span>
+                    <span class="token-position">Pos ${tokenIndex}</span>
+                  </div>
+                  <div class="embedding-values">
+                    ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
+                      const color = this.getMatrixColor(value);
+                      const intensity = Math.min(Math.abs(value) * 2, 1);
+                      return `
+                        <div class="embedding-cell" 
+                             data-token-index="${tokenIndex}" 
+                             data-dim-index="${dimIndex}"
+                             style="background-color: ${color}; opacity: ${intensity + 0.3}">
+                          <span class="cell-value">${value.toFixed(2)}</span>
+                          <div class="cell-tooltip">
+                            Token: ${embedding.token}<br>
+                            Position: ${tokenIndex}<br>
+                            Dimension: ${dimIndex}<br>
+                            Value: ${value.toFixed(4)}
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </div>
       </div>
@@ -1589,14 +1622,30 @@ class LanguageModelExplorer {
   }
 
   getMatrixColor(value) {
-    // Create a color gradient from red (negative) to white (zero) to blue (positive)
+    // Create a color gradient that better matches the teal/green theme
+    // Positive values: Teal to Green gradient
+    // Negative values: Light red to darker red (complementary to teal)
+    // Zero values: Neutral grey
+    
     const intensity = Math.min(Math.abs(value) * 2, 1);
+    
     if (value > 0) {
-      return `rgba(0, 0, 255, ${intensity})`;
+      // Teal to Green gradient for positive values
+      if (intensity < 0.5) {
+        return `rgba(20, 184, 166, ${intensity + 0.3})`; // Light teal
+      } else {
+        return `rgba(16, 185, 129, ${intensity + 0.3})`; // Green
+      }
     } else if (value < 0) {
-      return `rgba(255, 0, 0, ${intensity})`;
+      // Light red to darker red for negative values (complementary to teal)
+      if (intensity < 0.5) {
+        return `rgba(239, 68, 68, ${intensity + 0.3})`; // Light red
+      } else {
+        return `rgba(185, 28, 28, ${intensity + 0.3})`; // Darker red
+      }
     } else {
-      return 'rgba(128, 128, 128, 0.3)';
+      // Neutral grey for zero values
+      return 'rgba(156, 163, 175, 0.4)';
     }
   }
 
