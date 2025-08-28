@@ -1,4 +1,19 @@
 // Utility functions for HTML generation and common components
+console.log('=== UTILS.JS LOADING START ===');
+console.log('Timestamp:', new Date().toISOString());
+
+// Global error handler for utils.js
+window.addEventListener('error', function(event) {
+  if (event.filename && event.filename.includes('utils.js')) {
+    console.error('=== UTILS.JS ERROR CAUGHT ===');
+    console.error('Error:', event.error);
+    console.error('Message:', event.message);
+    console.error('Line:', event.lineno);
+    console.error('Column:', event.colno);
+    console.error('Stack:', event.error?.stack);
+  }
+});
+
 window.HTMLUtils = class HTMLUtils {
   // Create a card container with consistent styling
   static createCard(content, className = '') {
@@ -641,7 +656,7 @@ window.UIRenderer = class UIRenderer {
 }
 
 // Event management service to handle all event setup and handling
-export class EventManager {
+window.EventManager = class EventManager {
   constructor(explorer) {
     this.explorer = explorer;
     this.typingTimeout = null;
@@ -894,7 +909,7 @@ export class EventManager {
 }
 
 // Embeddings service to handle all embeddings generation and calculations
-export class EmbeddingsService {
+window.EmbeddingsService = class EmbeddingsService {
   static generateDictionaryEmbeddings(tokens, modelType) {
     const embeddingDim = this.getEmbeddingDimension(modelType);
     return tokens.map(token => {
@@ -1015,3 +1030,7 @@ export class EmbeddingsService {
     }
   }
 }
+
+// Final success message
+console.log('✓ All utility classes created successfully');
+console.log('=== UTILS.JS LOADING COMPLETED ===');

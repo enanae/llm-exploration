@@ -4,6 +4,29 @@ console.log('Timestamp:', new Date().toISOString());
 console.log('User Agent:', navigator.userAgent);
 console.log('Current URL:', window.location.href);
 
+// Syntax validation function
+function validateSyntax() {
+  try {
+    // Test basic JavaScript syntax
+    eval('(function() { return true; })()');
+    console.log('✓ Basic JavaScript syntax validation passed');
+    
+    // Test for required global classes
+    const requiredClasses = ['HTMLUtils', 'TokenizationService', 'ModelConfig', 'UIRenderer', 'EventManager', 'EmbeddingsService'];
+    const missingClasses = requiredClasses.filter(cls => !window[cls]);
+    
+    if (missingClasses.length > 0) {
+      throw new Error(`Missing required classes: ${missingClasses.join(', ')}`);
+    }
+    
+    console.log('✓ All required classes are available');
+    return true;
+  } catch (error) {
+    console.error('✗ Syntax validation failed:', error);
+    return false;
+  }
+}
+
 // Global error handler for uncaught errors
 window.addEventListener('error', function(event) {
   console.error('=== GLOBAL ERROR CAUGHT ===');
@@ -22,50 +45,80 @@ window.addEventListener('unhandledrejection', function(event) {
   console.error('Promise:', event.promise);
 });
 
-console.log('Attempting ES6 import...');
-import { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService } from './utils.js';
-console.log('=== ES6 IMPORT SUCCESSFUL ===');
-console.log('Available classes:', { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService });
+console.log('Checking for globally available classes...');
+console.log('Available classes:', { 
+  HTMLUtils: window.HTMLUtils, 
+  TokenizationService: window.TokenizationService, 
+  ModelConfig: window.ModelConfig, 
+  UIRenderer: window.UIRenderer, 
+  EventManager: window.EventManager, 
+  EmbeddingsService: window.EmbeddingsService 
+});
+
+// Validate syntax before proceeding
+if (!validateSyntax()) {
+  console.error('=== CRITICAL: Syntax validation failed. Application cannot start. ===');
+  document.body.innerHTML = `
+    <div style="padding: 2rem; text-align: center; color: #e74c3c;">
+      <h1>❌ Application Error</h1>
+      <p>JavaScript syntax validation failed. Please check the console for details.</p>
+      <p>This usually indicates a syntax error in the code that needs to be fixed.</p>
+    </div>
+  `;
+  throw new Error('Syntax validation failed - application cannot start');
+}
 
 class LanguageModelExplorer {
   constructor() {
-    console.log('=== LANGUAGE MODEL EXPLORER CONSTRUCTOR START ===');
-    this.currentModel = 'gpt2';
-    this.currentView = 'flow';
-    this.selectedToken = null;
-    this.tokenizationResult = null;
-    this.tokenizers = {};
-    this.embeddingsData = null;
-    this.currentStep = 'tokens';
-    this.autoPlayInterval = null;
-    
-    console.log('Properties initialized, creating EventManager...');
-    // Initialize services
-    this.eventManager = new EventManager(this);
-    
-    console.log('EventManager created, calling initialize...');
-    this.initialize();
+    try {
+      console.log('=== LANGUAGE MODEL EXPLORER CONSTRUCTOR START ===');
+      this.currentModel = 'gpt2';
+      this.currentView = 'flow';
+      this.selectedToken = null;
+      this.tokenizationResult = null;
+      this.tokenizers = {};
+      this.embeddingsData = null;
+      this.currentStep = 'tokens';
+      this.autoPlayInterval = null;
+      
+      console.log('Properties initialized, creating EventManager...');
+      // Initialize services
+      this.eventManager = new window.EventManager(this);
+      
+      console.log('EventManager created, calling initialize...');
+      this.initialize();
+    } catch (error) {
+      console.error('=== CONSTRUCTOR ERROR ===', error);
+      this.showError(`Failed to initialize application: ${error.message}`);
+      throw error;
+    }
   }
 
   initialize() {
-    console.log('=== INITIALIZE METHOD START ===');
-    console.log('LanguageModelExplorer initializing...');
-    
-    // Hide fallback message and show interface
-    this.showInterface();
-    
-    this.setupModelSelector();
-    this.eventManager.setupTokenizationEvents();
-    this.updateModelInfo();
-    
-    // Initialize tokenizers
-    this.initializeTokenizers();
-    
-    // Setup embeddings functionality
-    this.setupEmbeddings();
-    
-    console.log('LanguageModelExplorer initialized successfully');
-    console.log('=== INITIALIZE METHOD COMPLETED ===');
+    try {
+      console.log('=== INITIALIZE METHOD START ===');
+      console.log('LanguageModelExplorer initializing...');
+      
+      // Hide fallback message and show interface
+      this.showInterface();
+      
+      this.setupModelSelector();
+      this.eventManager.setupTokenizationEvents();
+      this.updateModelInfo();
+      
+      // Initialize tokenizers
+      this.initializeTokenizers();
+      
+      // Setup embeddings functionality
+      this.setupEmbeddings();
+      
+      console.log('LanguageModelExplorer initialized successfully');
+      console.log('=== INITIALIZE METHOD COMPLETED ===');
+    } catch (error) {
+      console.error('=== INITIALIZE ERROR ===', error);
+      this.showError(`Failed to initialize application: ${error.message}`);
+      throw error;
+    }
   }
 
   showInterface() {
@@ -582,11 +635,57 @@ class LanguageModelExplorer {
     this.displayTokenVisualizer();
   }
 
-  showError(message) {
-    const errorElement = document.getElementById('errorMessage');
-    if (errorElement) {
-      errorElement.textContent = message;
-      errorElement.style.display = 'block';
+  showError(message, isCritical = false) {
+    console.error('=== ERROR DISPLAYED ===', message);
+    
+    // Try to find error element
+    let errorElement = document.getElementById('errorMessage');
+    
+    // If not found, create one
+    if (!errorElement) {
+      errorElement = document.createElement('div');
+      errorElement.id = 'errorMessage';
+      errorElement.className = 'error-message';
+      errorElement.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${isCritical ? '#e74c3c' : '#f39c12'};
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 400px;
+        word-wrap: break-word;
+      `;
+      document.body.appendChild(errorElement);
+    }
+    
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    
+    // Auto-hide non-critical errors after 5 seconds
+    if (!isCritical) {
+      setTimeout(() => {
+        this.hideError();
+      }, 5000);
+    }
+    
+    // For critical errors, also log to console and show in page
+    if (isCritical) {
+      console.error('=== CRITICAL ERROR ===', message);
+      // Show critical error in page content
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.innerHTML = `
+          <div style="padding: 2rem; text-align: center; color: #e74c3c;">
+            <h1>❌ Critical Error</h1>
+            <p>${message}</p>
+            <p>Please check the console for more details and refresh the page.</p>
+          </div>
+        `;
+      }
     }
   }
 
@@ -1905,10 +2004,41 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Document ready state:', document.readyState);
   console.log('DOM loaded, initializing Language Model Explorer...');
   
+  // Pre-flight checks
+  console.log('=== PERFORMING PRE-FLIGHT CHECKS ===');
+  
+  // Check if all required classes are available
+  const requiredClasses = ['HTMLUtils', 'TokenizationService', 'ModelConfig', 'UIRenderer', 'EventManager', 'EmbeddingsService'];
+  const missingClasses = requiredClasses.filter(cls => !window[cls]);
+  
+  if (missingClasses.length > 0) {
+    const errorMsg = `Missing required classes: ${missingClasses.join(', ')}. Check that utils.js loaded correctly.`;
+    console.error('=== PRE-FLIGHT CHECK FAILED ===', errorMsg);
+    
+    const fallback = document.querySelector('.fallback');
+    if (fallback) {
+      fallback.innerHTML = `
+        <h1>Language Model Explorer</h1>
+        <p style="color: #dc2626;">Pre-flight Check Failed: ${errorMsg}</p>
+        <p><strong>Missing Classes:</strong> ${missingClasses.join(', ')}</p>
+        <p>This usually means utils.js failed to load or has syntax errors.</p>
+        <p>Check browser console and network tab for more details.</p>
+      `;
+    }
+    return;
+  }
+  
+  console.log('✓ Pre-flight checks passed');
+  
   try {
     console.log('=== CREATING LANGUAGE MODEL EXPLORER INSTANCE ===');
     const explorer = new LanguageModelExplorer();
     console.log('=== LANGUAGE MODEL EXPLORER CREATED SUCCESSFULLY ===');
+    
+    // Store reference globally for debugging
+    window.languageModelExplorer = explorer;
+    console.log('✓ Explorer instance stored globally as window.languageModelExplorer');
+    
   } catch (error) {
     console.error('=== FAILED TO CREATE LANGUAGE MODEL EXPLORER ===');
     console.error('Error type:', error.constructor.name);
@@ -1926,6 +2056,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <p><strong>Stack Trace:</strong></p>
         <pre style="background: #f1f5f9; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto;">${error.stack}</pre>
         <p>Check browser console for more details.</p>
+        <p><strong>Debug Info:</strong></p>
+        <ul>
+          <li>Scripts loaded: ${document.scripts.length}</li>
+          <li>Utils.js loaded: ${!!window.HTMLUtils}</li>
+          <li>Script.js loaded: ${!!window.languageModelExplorer}</li>
+        </ul>
       `;
     }
   }
