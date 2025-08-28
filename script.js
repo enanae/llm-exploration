@@ -888,9 +888,14 @@ class LanguageModelExplorer {
 
   async exploreEmbeddings() {
     const inputText = document.getElementById('embeddings-input-text')?.value;
-    if (!inputText || !inputText.trim()) return;
+    if (!inputText || !inputText.trim()) {
+      console.log('No input text provided');
+      return;
+    }
 
     try {
+      console.log('Starting embeddings exploration for:', inputText);
+      
       // Show loading state
       const exploreBtn = document.getElementById('exploreEmbeddingsBtn');
       if (exploreBtn) {
@@ -904,17 +909,29 @@ class LanguageModelExplorer {
       // Generate embeddings
       this.generateEmbeddings(inputText);
       
+      if (!this.embeddingsData) {
+        throw new Error('Failed to generate embeddings data');
+      }
+      
+      console.log('Embeddings generated successfully:', this.embeddingsData);
+      
       // Show pipeline
       const pipeline = document.getElementById('embeddingsPipeline');
-      if (pipeline) pipeline.style.display = 'block';
+      if (pipeline) {
+        pipeline.style.display = 'block';
+        console.log('Pipeline displayed');
+      } else {
+        console.error('Pipeline element not found');
+      }
 
       // Start with first step
       this.goToStep('tokens');
 
     } catch (error) {
       console.error('Embeddings error:', error);
-      this.showEmbeddingsError('Failed to generate embeddings. Please try again.');
+      this.showEmbeddingsError(`Failed to generate embeddings: ${error.message}`);
     } finally {
+      const exploreBtn = document.getElementById('exploreEmbeddingsBtn');
       if (exploreBtn) {
         exploreBtn.disabled = false;
         exploreBtn.textContent = 'Explore Embeddings';
@@ -923,16 +940,42 @@ class LanguageModelExplorer {
   }
 
   generateEmbeddings(text) {
+    console.log('Generating embeddings for text:', text);
+    
     // Tokenize the text
     const tokenizer = this.tokenizers[this.currentModel];
-    if (tokenizer) {
+    if (!tokenizer) {
+      console.error('No tokenizer found for model:', this.currentModel);
+      return;
+    }
+    
+    try {
       const tokens = tokenizer.tokenize(text);
+      console.log('Tokens generated:', tokens);
+      
+      // Generate dictionary embeddings first
+      const dictionaryEmbeddings = this.generateDictionaryEmbeddings(tokens);
+      console.log('Dictionary embeddings generated:', dictionaryEmbeddings.length);
+      
+      // Generate positional encoding
+      const positionalEncoding = this.generatePositionalEncoding(tokens.length);
+      console.log('Positional encoding generated:', positionalEncoding.length);
+      
+      // Now combine them (dictionaryEmbeddings and positionalEncoding are now available)
+      const finalEmbeddings = this.combineEmbeddings(tokens.length, dictionaryEmbeddings, positionalEncoding);
+      console.log('Final embeddings generated:', finalEmbeddings.length);
+      
       this.embeddingsData = {
         tokens,
-        dictionaryEmbeddings: this.generateDictionaryEmbeddings(tokens),
-        positionalEncoding: this.generatePositionalEncoding(tokens.length),
-        finalEmbeddings: this.combineEmbeddings(tokens.length)
+        dictionaryEmbeddings,
+        positionalEncoding,
+        finalEmbeddings
       };
+      
+      console.log('Embeddings data object created successfully');
+    } catch (error) {
+      console.error('Error in generateEmbeddings:', error);
+      throw error;
     }
   }
 
@@ -973,13 +1016,13 @@ class LanguageModelExplorer {
     return encoding;
   }
 
-  combineEmbeddings(seqLength) {
+  combineEmbeddings(seqLength, dictionaryEmbeddings, positionalEncoding) {
     const embeddingDim = 768;
     const combined = [];
     
     for (let pos = 0; pos < seqLength; pos++) {
-      const dictEmbedding = this.embeddingsData.dictionaryEmbeddings[pos]?.embedding || new Array(embeddingDim).fill(0);
-      const posEncoding = this.embeddingsData.positionalEncoding[pos]?.encoding || new Array(embeddingDim).fill(0);
+      const dictEmbedding = dictionaryEmbeddings[pos]?.embedding || new Array(embeddingDim).fill(0);
+      const posEncoding = positionalEncoding[pos]?.encoding || new Array(embeddingDim).fill(0);
       
       const combinedEmbedding = dictEmbedding.map((val, i) => val + posEncoding[i]);
       combined.push({
