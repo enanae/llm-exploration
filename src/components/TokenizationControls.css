@@ -1,0 +1,89 @@
+.controls-card {
+  background: var(--white);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.controls-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dark-grey);
+  margin-bottom: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: var(--dark-grey);
+  cursor: pointer;
+}
+
+.control-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.control-description {
+  font-size: 14px;
+  color: var(--grey);
+  margin-left: 30px;
+  line-height: 1.4;
+}
+
+.control-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.control-input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+
+.controls-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.model-info-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.model-badge {
+  background: var(--teal);
+  color: var(--white);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.model-type {
+  background: var(--light-grey);
+  color: var(--dark-grey);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
