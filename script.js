@@ -1101,17 +1101,344 @@ class LanguageModelExplorer {
     const details = document.getElementById('dictionaryDetails');
     
     if (matrix) {
-      matrix.innerHTML = this.createEmbeddingMatrix(
-        this.embeddingsData.dictionaryEmbeddings,
-        'Dictionary Embeddings'
+      matrix.innerHTML = this.createInteractiveDictionaryMatrix(
+        this.embeddingsData.tokens,
+        this.embeddingsData.dictionaryEmbeddings
       );
     }
     
     if (details) {
-      details.innerHTML = this.createEmbeddingDetails(
-        this.embeddingsData.dictionaryEmbeddings,
-        'dictionary'
+      details.innerHTML = this.createDictionaryDetails(
+        this.embeddingsData.tokens,
+        this.embeddingsData.dictionaryEmbeddings
       );
+    }
+
+    // Add interactive event listeners
+    this.setupDictionaryInteractivity();
+  }
+
+  createInteractiveDictionaryMatrix(tokens, embeddings) {
+    const maxDim = Math.min(12, embeddings[0]?.embedding?.length || 0);
+    const maxTokens = Math.min(8, embeddings.length);
+    
+    let matrix = `
+      <div class="dictionary-header">
+        <h5>Token → Embedding Lookup Process</h5>
+        <p class="dictionary-subtitle">Each token gets converted to a 768-dimensional vector</p>
+      </div>
+      
+      <div class="dictionary-visualization">
+        <div class="tokens-row">
+          <div class="tokens-label">Input Tokens:</div>
+          <div class="tokens-display">
+            ${tokens.slice(0, maxTokens).map((token, index) => `
+              <div class="token-badge" data-token-index="${index}">
+                <span class="token-text">${token.text}</span>
+                <span class="token-id">#${index}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="lookup-arrows">
+          ${tokens.slice(0, maxTokens).map((_, index) => `
+            <div class="lookup-arrow" data-token-index="${index}">
+              <span class="arrow-symbol">↓</span>
+              <span class="arrow-label">Lookup</span>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="embeddings-matrix">
+          <div class="matrix-header">
+            <span class="matrix-title">Embedding Vectors (768 dimensions)</span>
+            <div class="dimension-labels">
+              ${Array.from({length: maxDim}, (_, i) => `
+                <span class="dim-label" title="Dimension ${i}">${i}</span>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="matrix-rows">
+            ${embeddings.slice(0, maxTokens).map((embedding, tokenIndex) => `
+              <div class="matrix-row" data-token-index="${tokenIndex}">
+                <div class="row-label">
+                  <span class="token-name">${embedding.token}</span>
+                  <span class="token-position">Pos ${tokenIndex}</span>
+                </div>
+                <div class="embedding-values">
+                  ${embedding.embedding.slice(0, maxDim).map((value, dimIndex) => {
+                    const color = this.getMatrixColor(value);
+                    const intensity = Math.min(Math.abs(value) * 2, 1);
+                    return `
+                      <div class="embedding-cell" 
+                           data-token-index="${tokenIndex}" 
+                           data-dim-index="${dimIndex}"
+                           style="background-color: ${color}; opacity: ${intensity + 0.3}">
+                        <span class="cell-value">${value.toFixed(2)}</span>
+                        <div class="cell-tooltip">
+                          Token: ${embedding.token}<br>
+                          Position: ${tokenIndex}<br>
+                          Dimension: ${dimIndex}<br>
+                          Value: ${value.toFixed(4)}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div class="dictionary-controls">
+        <div class="control-group">
+          <label class="control-label">
+            <input type="checkbox" id="highlightDimensions" class="control-checkbox" checked>
+            Highlight Active Dimensions
+          </label>
+        </div>
+        <div class="control-group">
+          <label class="control-label">
+            <input type="checkbox" id="showValues" class="control-checkbox" checked>
+            Show Numerical Values
+          </label>
+        </div>
+        <div class="control-group">
+          <label class="control-label">
+            <input type="checkbox" id="animateLookup" class="control-checkbox">
+            Animate Lookup Process
+          </label>
+        </div>
+      </div>
+    `;
+    
+    return matrix;
+  }
+
+  createDictionaryDetails(tokens, embeddings) {
+    if (!embeddings || embeddings.length === 0) return '<p>No data available</p>';
+    
+    const avgMagnitude = embeddings.reduce((sum, emb) => sum + emb.magnitude, 0) / embeddings.length;
+    const maxMagnitude = Math.max(...embeddings.map(emb => emb.magnitude));
+    const minMagnitude = Math.min(...embeddings.map(emb => emb.magnitude));
+    
+    return `
+      <div class="dictionary-explanation">
+        <h5>How Dictionary Embeddings Work</h5>
+        
+        <div class="explanation-step">
+          <div class="step-icon">🔤</div>
+          <div class="step-content">
+            <h6>1. Token Input</h6>
+            <p>Each word or subword becomes a unique token ID</p>
+            <div class="token-examples">
+              ${tokens.slice(0, 3).map((token, index) => `
+                <span class="example-token">"${token.text}" → ID ${index}</span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <div class="explanation-step">
+          <div class="step-icon">📚</div>
+          <div class="step-content">
+            <h6>2. Embedding Table</h6>
+            <p>Pre-trained vectors for each token in the vocabulary</p>
+            <div class="embedding-info">
+              <span class="info-item">Vocabulary Size: ~50,000 tokens</span>
+              <span class="info-item">Embedding Dimension: 768</span>
+              <span class="info-item">Total Parameters: ~38M</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="explanation-step">
+          <div class="step-icon">🔍</div>
+          <div class="step-content">
+            <h6>3. Vector Lookup</h6>
+            <p>Each token ID retrieves its corresponding 768D vector</p>
+            <div class="lookup-example">
+              <span class="example-lookup">"${tokens[0]?.text || 'hello'}" → [0.23, -0.45, 0.67, ...]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dictionary-stats">
+        <h5>Embedding Statistics</h5>
+        <div class="stat-item">
+          <span class="stat-label">Average Magnitude:</span>
+          <span class="stat-value">${avgMagnitude.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Max Magnitude:</span>
+          <span class="stat-value">${maxMagnitude.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Min Magnitude:</span>
+          <span class="stat-value">${minMagnitude.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Embedding Dimension:</span>
+          <span class="stat-value">${embeddings[0]?.embedding?.length || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Sequence Length:</span>
+          <span class="stat-value">${embeddings.length}</span>
+        </div>
+      </div>
+      
+      <div class="interactive-features">
+        <h5>Interactive Features</h5>
+        <ul class="feature-list">
+          <li>🎯 <strong>Click tokens</strong> to highlight their embeddings</li>
+          <li>🔍 <strong>Hover over cells</strong> to see detailed values</li>
+          <li>📊 <strong>Toggle controls</strong> to customize the view</li>
+          <li>🎨 <strong>Color coding</strong> shows positive/negative values</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  setupDictionaryInteractivity() {
+    // Token click highlighting
+    document.querySelectorAll('.token-badge').forEach(badge => {
+      badge.addEventListener('click', () => {
+        const tokenIndex = parseInt(badge.dataset.tokenIndex);
+        this.highlightTokenEmbedding(tokenIndex);
+      });
+    });
+
+    // Embedding cell hover effects
+    document.querySelectorAll('.embedding-cell').forEach(cell => {
+      cell.addEventListener('mouseenter', () => {
+        const tokenIndex = parseInt(cell.dataset.tokenIndex);
+        const dimIndex = parseInt(cell.dataset.dimIndex);
+        this.highlightCell(tokenIndex, dimIndex);
+      });
+      
+      cell.addEventListener('mouseleave', () => {
+        this.clearHighlights();
+      });
+    });
+
+    // Control checkboxes
+    const highlightDimensions = document.getElementById('highlightDimensions');
+    const showValues = document.getElementById('showValues');
+    const animateLookup = document.getElementById('animateLookup');
+
+    if (highlightDimensions) {
+      highlightDimensions.addEventListener('change', () => {
+        this.toggleDimensionHighlighting();
+      });
+    }
+
+    if (showValues) {
+      showValues.addEventListener('change', () => {
+        this.toggleValueDisplay();
+      });
+    }
+
+    if (animateLookup) {
+      animateLookup.addEventListener('change', () => {
+        this.toggleLookupAnimation();
+      });
+    }
+  }
+
+  highlightTokenEmbedding(tokenIndex) {
+    // Clear previous highlights
+    this.clearHighlights();
+    
+    // Highlight the selected token
+    const tokenBadge = document.querySelector(`.token-badge[data-token-index="${tokenIndex}"]`);
+    if (tokenBadge) {
+      tokenBadge.classList.add('highlighted');
+    }
+    
+    // Highlight the corresponding matrix row
+    const matrixRow = document.querySelector(`.matrix-row[data-token-index="${tokenIndex}"]`);
+    if (matrixRow) {
+      matrixRow.classList.add('highlighted');
+    }
+    
+    // Highlight the lookup arrow
+    const lookupArrow = document.querySelector(`.lookup-arrow[data-token-index="${tokenIndex}"]`);
+    if (lookupArrow) {
+      lookupArrow.classList.add('highlighted');
+    }
+  }
+
+  highlightCell(tokenIndex, dimIndex) {
+    // Highlight the specific cell
+    const cell = document.querySelector(`.embedding-cell[data-token-index="${tokenIndex}"][data-dim-index="${dimIndex}"]`);
+    if (cell) {
+      cell.classList.add('cell-highlighted');
+    }
+    
+    // Highlight the corresponding token and dimension
+    const tokenBadge = document.querySelector(`.token-badge[data-token-index="${tokenIndex}"]`);
+    if (tokenBadge) {
+      tokenBadge.classList.add('dimension-highlighted');
+    }
+    
+    const dimLabel = document.querySelector(`.dim-label:nth-child(${dimIndex + 1})`);
+    if (dimLabel) {
+      dimLabel.classList.add('dimension-highlighted');
+    }
+  }
+
+  clearHighlights() {
+    document.querySelectorAll('.highlighted, .cell-highlighted, .dimension-highlighted').forEach(el => {
+      el.classList.remove('highlighted', 'cell-highlighted', 'dimension-highlighted');
+    });
+  }
+
+  toggleDimensionHighlighting() {
+    const isEnabled = document.getElementById('highlightDimensions')?.checked;
+    document.querySelectorAll('.embedding-cell').forEach(cell => {
+      if (isEnabled) {
+        cell.style.border = '1px solid var(--teal)';
+      } else {
+        cell.style.border = 'none';
+      }
+    });
+  }
+
+  toggleValueDisplay() {
+    const isEnabled = document.getElementById('showValues')?.checked;
+    document.querySelectorAll('.cell-value').forEach(value => {
+      value.style.display = isEnabled ? 'block' : 'none';
+    });
+  }
+
+  toggleLookupAnimation() {
+    const isEnabled = document.getElementById('animateLookup')?.checked;
+    if (isEnabled) {
+      this.startLookupAnimation();
+    } else {
+      this.stopLookupAnimation();
+    }
+  }
+
+  startLookupAnimation() {
+    const tokens = document.querySelectorAll('.token-badge');
+    let currentIndex = 0;
+    
+    this.lookupAnimationInterval = setInterval(() => {
+      this.highlightTokenEmbedding(currentIndex);
+      currentIndex = (currentIndex + 1) % tokens.length;
+    }, 1000);
+  }
+
+  stopLookupAnimation() {
+    if (this.lookupAnimationInterval) {
+      clearInterval(this.lookupAnimationInterval);
+      this.lookupAnimationInterval = null;
+      this.clearHighlights();
     }
   }
 
