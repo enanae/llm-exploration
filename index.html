@@ -2,15 +2,179 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Language Model Explorer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+      /* Fallback styles in case CSS doesn't load */
+      body { 
+        font-family: Arial, sans-serif; 
+        margin: 20px; 
+        background: #f8fafc; 
+      }
+      .fallback { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        margin: 20px 0; 
+        border: 1px solid #e2e8f0; 
+      }
+      .loading { color: #64748b; font-style: italic; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root">
+      <!-- Fallback message while loading -->
+      <div class="fallback">
+        <h1>Language Model Explorer</h1>
+        <p class="loading">Loading interactive interface...</p>
+        <p>If you see this message for more than a few seconds, there might be an issue with the JavaScript or CSS files.</p>
+      </div>
+
+      <!-- Header -->
+      <header class="header" style="display: none;">
+        <div class="container">
+          <div class="header-content">
+            <div class="header-left">
+              <h1 class="header-title">
+                <span class="text-teal">Language</span> Model Explorer
+              </h1>
+              <p class="header-subtitle">
+                Interactive exploration of transformer internals and tokenization
+              </p>
+            </div>
+            <div class="header-right">
+              <div class="header-badge">
+                <span class="badge-icon">🧠</span>
+                <span>AI Research Tool</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="container" style="display: none;">
+        <div class="grid gap-6">
+          <!-- Model Selector -->
+          <div class="card">
+            <h2 class="text-lg font-semibold mb-4">Select Language Model</h2>
+            <div class="grid grid-3" id="modelSelector">
+              <!-- Models will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Tokenization Explorer -->
+          <div class="card">
+            <h2 class="text-lg font-semibold mb-6">Tokenization Explorer</h2>
+            
+            <div class="grid gap-6">
+              <div class="input-section">
+                <label for="input-text" class="input-label">
+                  Input Text
+                </label>
+                <textarea
+                  id="input-text"
+                  class="input textarea"
+                  placeholder="Enter text to tokenize..."
+                  rows="4"
+                >The quick brown fox jumps over the lazy dog. This is a sample text to demonstrate tokenization.</textarea>
+              </div>
+
+              <div class="controls-card">
+                <h3 class="controls-title">Tokenization Parameters</h3>
+                
+                <div class="grid grid-2 gap-4">
+                  <div class="control-group">
+                    <label class="control-label">
+                      <input type="checkbox" id="addSpecialTokens" class="control-checkbox" checked>
+                      Add Special Tokens
+                    </label>
+                    <p class="control-description">
+                      Include [CLS], [SEP], [PAD] tokens for BERT-style models
+                    </p>
+                  </div>
+
+                  <div class="control-group">
+                    <label class="checkbox" id="padding" class="control-checkbox">
+                      Padding
+                    </label>
+                    <p class="control-description">
+                      Pad sequences to uniform length
+                    </p>
+                  </div>
+
+                  <div class="control-group">
+                    <label class="control-label">
+                      <input type="checkbox" id="truncation" class="control-checkbox">
+                      Truncation
+                    </label>
+                    <p class="control-description">
+                      Truncate sequences that exceed max length
+                    </p>
+                  </div>
+
+                  <div class="control-group">
+                    <label class="control-label">
+                      Max Length
+                    </label>
+                    <input type="number" id="maxLength" class="control-input" value="512" min="1" max="2048">
+                    <p class="control-description">
+                      Maximum sequence length
+                    </p>
+                  </div>
+                </div>
+
+                <div class="controls-actions">
+                  <button class="btn" id="analyzeBtn">
+                    Analyze Tokenization
+                  </button>
+                  
+                  <div class="model-info-display">
+                    <span class="model-badge" id="currentModel">gpt2</span>
+                    <span class="model-type" id="modelType">GPT-style</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+              <div id="tokenStats" style="display: none;"></div>
+              <div id="tokenVisualizer" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Debug logging
+      console.log('HTML loaded, attempting to load JavaScript...');
+      
+      // Check if files exist
+      fetch('./styles.css')
+        .then(response => {
+          if (response.ok) {
+            console.log('CSS file found and loaded');
+          } else {
+            console.error('CSS file not found:', response.status);
+          }
+        })
+        .catch(error => console.error('Error loading CSS:', error));
+      
+      fetch('./script.js')
+        .then(response => {
+          if (response.ok) {
+            console.log('JavaScript file found and loaded');
+          } else {
+            console.error('JavaScript file not found:', response.status);
+          }
+        })
+        .catch(error => console.error('Error loading JavaScript:', error));
+    </script>
+    <script src="./script.js"></script>
   </body>
 </html>
