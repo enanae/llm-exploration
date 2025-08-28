@@ -699,7 +699,7 @@ class LanguageModelExplorer {
       'rgba(5, 150, 105, 0.1)',
       'rgba(13, 148, 136, 0.1)'
     ];
-    return backgrounds[index % colors.length];
+    return backgrounds[index % backgrounds.length];
   }
 
   setupTokenInteractions() {
