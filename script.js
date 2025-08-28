@@ -1,8 +1,35 @@
 // Language Model Explorer - Main JavaScript
+console.log('=== SCRIPT.JS LOADING START ===');
+console.log('Timestamp:', new Date().toISOString());
+console.log('User Agent:', navigator.userAgent);
+console.log('Current URL:', window.location.href);
+
+// Global error handler for uncaught errors
+window.addEventListener('error', function(event) {
+  console.error('=== GLOBAL ERROR CAUGHT ===');
+  console.error('Error:', event.error);
+  console.error('Message:', event.message);
+  console.error('Filename:', event.filename);
+  console.error('Line:', event.lineno);
+  console.error('Column:', event.colno);
+  console.error('Stack:', event.error?.stack);
+});
+
+// Global promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('=== UNHANDLED PROMISE REJECTION ===');
+  console.error('Reason:', event.reason);
+  console.error('Promise:', event.promise);
+});
+
+console.log('Attempting ES6 import...');
 import { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService } from './utils.js';
+console.log('=== ES6 IMPORT SUCCESSFUL ===');
+console.log('Available classes:', { HTMLUtils, TokenizationService, ModelConfig, UIRenderer, EventManager, EmbeddingsService });
 
 class LanguageModelExplorer {
   constructor() {
+    console.log('=== LANGUAGE MODEL EXPLORER CONSTRUCTOR START ===');
     this.currentModel = 'gpt2';
     this.currentView = 'flow';
     this.selectedToken = null;
@@ -12,13 +39,16 @@ class LanguageModelExplorer {
     this.currentStep = 'tokens';
     this.autoPlayInterval = null;
     
+    console.log('Properties initialized, creating EventManager...');
     // Initialize services
     this.eventManager = new EventManager(this);
     
+    console.log('EventManager created, calling initialize...');
     this.initialize();
   }
 
   initialize() {
+    console.log('=== INITIALIZE METHOD START ===');
     console.log('LanguageModelExplorer initializing...');
     
     // Hide fallback message and show interface
@@ -35,21 +65,39 @@ class LanguageModelExplorer {
     this.setupEmbeddings();
     
     console.log('LanguageModelExplorer initialized successfully');
+    console.log('=== INITIALIZE METHOD COMPLETED ===');
   }
 
   showInterface() {
+    console.log('=== SHOW INTERFACE METHOD START ===');
     // Hide fallback message
     const fallback = document.querySelector('.fallback');
     if (fallback) {
+      console.log('Fallback element found, hiding it...');
       fallback.style.display = 'none';
+    } else {
+      console.warn('Fallback element not found');
     }
     
     // Show header and main content
     const header = document.querySelector('.header');
     const main = document.querySelector('main');
     
-    if (header) header.style.display = 'block';
-    if (main) main.style.display = 'block';
+    if (header) {
+      console.log('Header element found, showing it...');
+      header.style.display = 'block';
+    } else {
+      console.warn('Header element not found');
+    }
+    
+    if (main) {
+      console.log('Main element found, showing it...');
+      main.style.display = 'block';
+    } else {
+      console.warn('Main element not found');
+    }
+    
+    console.log('=== SHOW INTERFACE METHOD COMPLETED ===');
   }
 
   async initializeTokenizers() {
@@ -1852,48 +1900,35 @@ class LanguageModelExplorer {
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('=== DOM CONTENT LOADED EVENT FIRED ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Document ready state:', document.readyState);
   console.log('DOM loaded, initializing Language Model Explorer...');
-  // Wait for all utility classes to be available
-  function waitForUtils() {
-    console.log('Waiting for utility classes to load...');
-    console.log('Available classes:', {
-      HTMLUtils: !!window.HTMLUtils,
-      TokenizationService: !!window.TokenizationService,
-      ModelConfig: !!window.ModelConfig,
-      UIRenderer: !!window.UIRenderer,
-      EventManager: !!window.EventManager,
-      EmbeddingsService: !!window.EmbeddingsService
-    });
+  
+  try {
+    console.log('=== CREATING LANGUAGE MODEL EXPLORER INSTANCE ===');
+    const explorer = new LanguageModelExplorer();
+    console.log('=== LANGUAGE MODEL EXPLORER CREATED SUCCESSFULLY ===');
+  } catch (error) {
+    console.error('=== FAILED TO CREATE LANGUAGE MODEL EXPLORER ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', error);
     
-    if (window.HTMLUtils && window.TokenizationService && window.ModelConfig && 
-        window.UIRenderer && window.EventManager && window.EmbeddingsService) {
-      console.log('All utility classes loaded, initializing app...');
-      initializeApp();
-    } else {
-      console.log('Some utility classes not yet loaded, retrying in 100ms...');
-      setTimeout(waitForUtils, 100);
-    }
-  }
-
-  function initializeApp() {
-    try {
-      console.log('Initializing Language Model Explorer...');
-      const explorer = new LanguageModelExplorer();
-      console.log('Language Model Explorer initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize Language Model Explorer:', error);
-      
-      // Show detailed error in fallback message
-      const fallback = document.querySelector('.fallback');
-      if (fallback) {
-        fallback.innerHTML = `
-          <h1>Language Model Explorer</h1>
-          <p style="color: #dc2626;">Initialization Error: ${error.message}</p>
-          <p><strong>Stack Trace:</strong></p>
-          <pre style="background: #f1f5f9; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto;">${error.stack}</pre>
-          <p>Check browser console for more details.</p>
-        `;
-      }
+    // Show detailed error in fallback message
+    const fallback = document.querySelector('.fallback');
+    if (fallback) {
+      fallback.innerHTML = `
+        <h1>Language Model Explorer</h1>
+        <p style="color: #dc2626;">Initialization Error: ${error.message}</p>
+        <p><strong>Error Type:</strong> ${error.constructor.name}</p>
+        <p><strong>Stack Trace:</strong></p>
+        <pre style="background: #f1f5f9; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto;">${error.stack}</pre>
+        <p>Check browser console for more details.</p>
+      `;
     }
   }
 });
+
+console.log('=== SCRIPT.JS LOADING COMPLETED ===');
