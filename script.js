@@ -24,6 +24,9 @@ class LanguageModelExplorer {
     // Initialize tokenizers
     this.initializeTokenizers();
     
+    // Setup embeddings functionality
+    this.setupEmbeddings();
+    
     console.log('LanguageModelExplorer initialized successfully');
   }
 
@@ -753,6 +756,533 @@ class LanguageModelExplorer {
     const errorElement = document.getElementById('errorMessage');
     if (errorElement) {
       errorElement.style.display = 'none';
+    }
+  }
+
+  setupEmbeddings() {
+    this.setupEmbeddingsModelSelector();
+    this.setupEmbeddingsEventListeners();
+    this.setupNavigation();
+    this.currentStep = 0;
+    this.autoPlayInterval = null;
+  }
+
+  setupEmbeddingsModelSelector() {
+    const models = [
+      { id: 'gpt2', name: 'GPT-2', description: 'OpenAI GPT-2 (768D embeddings)' },
+      { id: 'bert-base-uncased', name: 'BERT Base', description: 'Google BERT (768D embeddings)' },
+      { id: 'roberta-base', name: 'RoBERTa Base', description: 'Facebook RoBERTa (768D embeddings)' }
+    ];
+
+    const modelSelector = document.getElementById('embeddingsModelSelector');
+    if (!modelSelector) return;
+    
+    modelSelector.innerHTML = models.map(model => `
+      <div class="model-option ${model.id === this.currentModel ? 'selected' : ''}" 
+           data-model="${model.id}">
+        <div class="model-info">
+          <h3 class="model-name">${model.name}</h3>
+          <p class="model-description">${model.description}</p>
+        </div>
+        <div class="model-status">
+          ${model.id === this.currentModel ? '<span class="status-indicator">✓</span>' : ''}
+        </div>
+      </div>
+    `).join('');
+
+    // Add click event listeners
+    modelSelector.querySelectorAll('.model-option').forEach(option => {
+      option.addEventListener('click', () => {
+        this.selectEmbeddingsModel(option.dataset.model);
+      });
+    });
+  }
+
+  selectEmbeddingsModel(modelId) {
+    this.currentModel = modelId;
+    
+    // Update UI
+    document.querySelectorAll('#embeddingsModelSelector .model-option').forEach(option => {
+      option.classList.toggle('selected', option.dataset.model === modelId);
+    });
+    
+    // Update tokenization model selector as well
+    document.querySelectorAll('#modelSelector .model-option').forEach(option => {
+      option.classList.toggle('selected', option.dataset.model === modelId);
+    });
+    
+    this.updateModelInfo();
+    
+    // Re-run embeddings if we have text
+    const inputText = document.getElementById('embeddings-input-text')?.value;
+    if (inputText && inputText.trim()) {
+      this.exploreEmbeddings();
+    }
+  }
+
+  setupEmbeddingsEventListeners() {
+    const exploreBtn = document.getElementById('exploreEmbeddingsBtn');
+    if (exploreBtn) {
+      exploreBtn.addEventListener('click', () => {
+        this.exploreEmbeddings();
+      });
+    }
+
+    const inputText = document.getElementById('embeddings-input-text');
+    if (inputText) {
+      inputText.addEventListener('input', () => {
+        // Auto-explore after typing stops
+        clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => {
+          if (inputText.value.trim()) {
+            this.exploreEmbeddings();
+          }
+        }, 500);
+      });
+    }
+
+    // Pipeline navigation
+    const prevBtn = document.getElementById('prevStep');
+    const nextBtn = document.getElementById('nextStep');
+    const autoPlayBtn = document.getElementById('autoPlay');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => this.previousStep());
+    if (nextBtn) nextBtn.addEventListener('click', () => this.nextStep());
+    if (autoPlayBtn) autoPlayBtn.addEventListener('click', () => this.toggleAutoPlay());
+
+    // Step click handlers
+    document.querySelectorAll('.step').forEach(step => {
+      step.addEventListener('click', () => {
+        const stepName = step.dataset.step;
+        this.goToStep(stepName);
+      });
+    });
+  }
+
+  setupNavigation() {
+    const navBtns = document.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        this.switchPage(page);
+      });
+    });
+  }
+
+  switchPage(page) {
+    // Update navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.page === page);
+    });
+
+    // Update page content
+    document.querySelectorAll('.page-content').forEach(content => {
+      content.classList.toggle('active', content.id === `${page}-page`);
+    });
+
+    // Reset embeddings pipeline if switching to embeddings page
+    if (page === 'embeddings') {
+      this.resetEmbeddingsPipeline();
+    }
+  }
+
+  async exploreEmbeddings() {
+    const inputText = document.getElementById('embeddings-input-text')?.value;
+    if (!inputText || !inputText.trim()) return;
+
+    try {
+      // Show loading state
+      const exploreBtn = document.getElementById('exploreEmbeddingsBtn');
+      if (exploreBtn) {
+        exploreBtn.disabled = true;
+        exploreBtn.textContent = 'Exploring...';
+      }
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Generate embeddings
+      this.generateEmbeddings(inputText);
+      
+      // Show pipeline
+      const pipeline = document.getElementById('embeddingsPipeline');
+      if (pipeline) pipeline.style.display = 'block';
+
+      // Start with first step
+      this.goToStep('tokens');
+
+    } catch (error) {
+      console.error('Embeddings error:', error);
+      this.showEmbeddingsError('Failed to generate embeddings. Please try again.');
+    } finally {
+      if (exploreBtn) {
+        exploreBtn.disabled = false;
+        exploreBtn.textContent = 'Explore Embeddings';
+      }
+    }
+  }
+
+  generateEmbeddings(text) {
+    // Tokenize the text
+    const tokenizer = this.tokenizers[this.currentModel];
+    if (tokenizer) {
+      const tokens = tokenizer.tokenize(text);
+      this.embeddingsData = {
+        tokens,
+        dictionaryEmbeddings: this.generateDictionaryEmbeddings(tokens),
+        positionalEncoding: this.generatePositionalEncoding(tokens.length),
+        finalEmbeddings: this.combineEmbeddings(tokens.length)
+      };
+    }
+  }
+
+  generateDictionaryEmbeddings(tokens) {
+    // Simulate dictionary embeddings (random for demo)
+    const embeddingDim = this.currentModel.includes('gpt') ? 768 : 768;
+    return tokens.map(token => {
+      const embedding = new Array(embeddingDim).fill(0).map(() => 
+        (Math.random() - 0.5) * 2
+      );
+      return {
+        token: token.text,
+        embedding,
+        magnitude: Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0))
+      };
+    });
+  }
+
+  generatePositionalEncoding(seqLength) {
+    const embeddingDim = 768;
+    const encoding = [];
+    
+    for (let pos = 0; pos < seqLength; pos++) {
+      const posEncoding = new Array(embeddingDim).fill(0).map((_, i) => {
+        if (i % 2 === 0) {
+          return Math.sin(pos / Math.pow(10000, i / embeddingDim));
+        } else {
+          return Math.cos(pos / Math.pow(10000, (i - 1) / embeddingDim));
+        }
+      });
+      encoding.push({
+        position: pos,
+        encoding: posEncoding,
+        magnitude: Math.sqrt(posEncoding.reduce((sum, val) => sum + val * val, 0))
+      });
+    }
+    
+    return encoding;
+  }
+
+  combineEmbeddings(seqLength) {
+    const embeddingDim = 768;
+    const combined = [];
+    
+    for (let pos = 0; pos < seqLength; pos++) {
+      const dictEmbedding = this.embeddingsData.dictionaryEmbeddings[pos]?.embedding || new Array(embeddingDim).fill(0);
+      const posEncoding = this.embeddingsData.positionalEncoding[pos]?.encoding || new Array(embeddingDim).fill(0);
+      
+      const combinedEmbedding = dictEmbedding.map((val, i) => val + posEncoding[i]);
+      combined.push({
+        position: pos,
+        embedding: combinedEmbedding,
+        magnitude: Math.sqrt(combinedEmbedding.reduce((sum, val) => sum + val * val, 0))
+      });
+    }
+    
+    return combined;
+  }
+
+  goToStep(stepName) {
+    const steps = ['tokens', 'dictionary', 'positional', 'final'];
+    const stepIndex = steps.indexOf(stepName);
+    
+    if (stepIndex === -1) return;
+    
+    this.currentStep = stepIndex;
+    
+    // Update step indicators
+    document.querySelectorAll('.step').forEach((step, index) => {
+      step.classList.toggle('active', index === stepIndex);
+    });
+
+    // Update step content
+    document.querySelectorAll('.pipeline-step').forEach((step, index) => {
+      step.classList.toggle('active', index === stepIndex);
+    });
+
+    // Update navigation buttons
+    const prevBtn = document.getElementById('prevStep');
+    const nextBtn = document.getElementById('nextStep');
+    
+    if (prevBtn) prevBtn.disabled = stepIndex === 0;
+    if (nextBtn) nextBtn.disabled = stepIndex === steps.length - 1;
+
+    // Render step content
+    this.renderStepContent(stepName);
+  }
+
+  renderStepContent(stepName) {
+    switch (stepName) {
+      case 'tokens':
+        this.renderTokensStep();
+        break;
+      case 'dictionary':
+        this.renderDictionaryStep();
+        break;
+      case 'positional':
+        this.renderPositionalStep();
+        break;
+      case 'final':
+        this.renderFinalStep();
+        break;
+    }
+  }
+
+  renderTokensStep() {
+    if (!this.embeddingsData?.tokens) return;
+    
+    const tokenDisplay = document.getElementById('tokenDisplay');
+    if (!tokenDisplay) return;
+    
+    tokenDisplay.innerHTML = this.embeddingsData.tokens.map((token, index) => `
+      <div class="token-item-embedding" data-token-index="${index}">
+        ${token.text}
+      </div>
+    `).join('');
+  }
+
+  renderDictionaryStep() {
+    if (!this.embeddingsData?.dictionaryEmbeddings) return;
+    
+    const matrix = document.getElementById('dictionaryMatrix');
+    const details = document.getElementById('dictionaryDetails');
+    
+    if (matrix) {
+      matrix.innerHTML = this.createEmbeddingMatrix(
+        this.embeddingsData.dictionaryEmbeddings,
+        'Dictionary Embeddings'
+      );
+    }
+    
+    if (details) {
+      details.innerHTML = this.createEmbeddingDetails(
+        this.embeddingsData.dictionaryEmbeddings,
+        'dictionary'
+      );
+    }
+  }
+
+  renderPositionalStep() {
+    if (!this.embeddingsData?.positionalEncoding) return;
+    
+    const heatmap = document.getElementById('positionalHeatmap');
+    const details = document.getElementById('dictionaryDetails');
+    
+    if (heatmap) {
+      heatmap.innerHTML = this.createPositionalHeatmap(
+        this.embeddingsData.positionalEncoding
+      );
+    }
+    
+    if (details) {
+      details.innerHTML = this.createEmbeddingDetails(
+        this.embeddingsData.positionalEncoding,
+        'positional'
+      );
+    }
+  }
+
+  renderFinalStep() {
+    if (!this.embeddingsData?.finalEmbeddings) return;
+    
+    const visual3d = document.getElementById('finalEmbeddings3D');
+    const stats = document.getElementById('embeddingStats');
+    
+    if (visual3d) {
+      visual3d.innerHTML = this.create3DVisualization(
+        this.embeddingsData.finalEmbeddings
+      );
+    }
+    
+    if (stats) {
+      stats.innerHTML = this.createEmbeddingStats(
+        this.embeddingsData.finalEmbeddings
+      );
+    }
+  }
+
+  createEmbeddingMatrix(embeddings, title) {
+    const maxDim = Math.min(10, embeddings[0]?.embedding?.length || 0);
+    const maxTokens = Math.min(5, embeddings.length);
+    
+    let matrix = `<h5>${title} Matrix (${maxTokens} × ${maxDim})</h5>`;
+    matrix += '<div class="matrix-container">';
+    
+    for (let i = 0; i < maxTokens; i++) {
+      matrix += '<div class="matrix-row">';
+      for (let j = 0; j < maxDim; j++) {
+        const value = embeddings[i]?.embedding[j] || 0;
+        const color = this.getMatrixColor(value);
+        matrix += `<div class="matrix-cell" style="background-color: ${color}">${value.toFixed(2)}</div>`;
+      }
+      matrix += '</div>';
+    }
+    
+    matrix += '</div>';
+    return matrix;
+  }
+
+  createPositionalHeatmap(encoding) {
+    const maxDim = Math.min(20, encoding[0]?.encoding?.length || 0);
+    const maxPos = Math.min(10, encoding.length);
+    
+    let heatmap = '<h5>Positional Encoding Heatmap</h5>';
+    heatmap += '<div class="heatmap-container">';
+    
+    for (let pos = 0; pos < maxPos; pos++) {
+      heatmap += '<div class="heatmap-row">';
+      for (let dim = 0; dim < maxDim; dim++) {
+        const value = encoding[pos]?.encoding[dim] || 0;
+        const color = this.getMatrixColor(value);
+        heatmap += `<div class="heatmap-cell" style="background-color: ${color}" title="Pos ${pos}, Dim ${dim}: ${value.toFixed(3)}"></div>`;
+      }
+      heatmap += '</div>';
+    }
+    
+    heatmap += '</div>';
+    return heatmap;
+  }
+
+  create3DVisualization(embeddings) {
+    return `
+      <h5>3D Embedding Visualization</h5>
+      <div class="3d-container">
+        <p>Interactive 3D visualization would go here</p>
+        <p>Showing ${embeddings.length} tokens with ${embeddings[0]?.embedding?.length || 0} dimensions</p>
+      </div>
+    `;
+  }
+
+  createEmbeddingDetails(embeddings, type) {
+    if (!embeddings || embeddings.length === 0) return '<p>No data available</p>';
+    
+    const avgMagnitude = embeddings.reduce((sum, emb) => sum + emb.magnitude, 0) / embeddings.length;
+    const maxMagnitude = Math.max(...embeddings.map(emb => emb.magnitude));
+    const minMagnitude = Math.min(...embeddings.map(emb => emb.magnitude));
+    
+    return `
+      <h5>${type.charAt(0).toUpperCase() + type.slice(1)} Details</h5>
+      <div class="detail-item">
+        <span class="detail-label">Average Magnitude:</span>
+        <span class="detail-value">${avgMagnitude.toFixed(3)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Max Magnitude:</span>
+        <span class="detail-value">${maxMagnitude.toFixed(3)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Min Magnitude:</span>
+        <span class="detail-value">${minMagnitude.toFixed(3)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Embedding Dimension:</span>
+        <span class="detail-value">${embeddings[0]?.embedding?.length || 0}</span>
+      </div>
+    `;
+  }
+
+  createEmbeddingStats(embeddings) {
+    if (!embeddings || embeddings.length === 0) return '<p>No data available</p>';
+    
+    const avgMagnitude = embeddings.reduce((sum, emb) => sum + emb.magnitude, 0) / embeddings.length;
+    const totalMagnitude = embeddings.reduce((sum, emb) => sum + emb.magnitude, 0);
+    
+    return `
+      <h5>Final Embedding Statistics</h5>
+      <div class="detail-item">
+        <span class="detail-label">Sequence Length:</span>
+        <span class="detail-value">${embeddings.length}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Average Magnitude:</span>
+        <span class="detail-value">${avgMagnitude.toFixed(3)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Total Magnitude:</span>
+        <span class="detail-value">${totalMagnitude.toFixed(3)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Model:</span>
+        <span class="detail-value">${this.currentModel}</span>
+      </div>
+    `;
+  }
+
+  getMatrixColor(value) {
+    // Create a color gradient from red (negative) to white (zero) to blue (positive)
+    const intensity = Math.min(Math.abs(value) * 2, 1);
+    if (value > 0) {
+      return `rgba(0, 0, 255, ${intensity})`;
+    } else if (value < 0) {
+      return `rgba(255, 0, 0, ${intensity})`;
+    } else {
+      return 'rgba(128, 128, 128, 0.3)';
+    }
+  }
+
+  previousStep() {
+    if (this.currentStep > 0) {
+      this.goToStep(['tokens', 'dictionary', 'positional', 'final'][this.currentStep - 1]);
+    }
+  }
+
+  nextStep() {
+    if (this.currentStep < 3) {
+      this.goToStep(['tokens', 'dictionary', 'positional', 'final'][this.currentStep + 1]);
+    }
+  }
+
+  toggleAutoPlay() {
+    const autoPlayBtn = document.getElementById('autoPlay');
+    if (!autoPlayBtn) return;
+    
+    if (this.autoPlayInterval) {
+      clearInterval(this.autoPlayInterval);
+      this.autoPlayInterval = null;
+      autoPlayBtn.textContent = '▶ Auto-play';
+    } else {
+      this.autoPlayInterval = setInterval(() => {
+        if (this.currentStep < 3) {
+          this.nextStep();
+        } else {
+          this.goToStep('tokens');
+        }
+      }, 2000);
+      autoPlayBtn.textContent = '⏸ Stop';
+    }
+  }
+
+  resetEmbeddingsPipeline() {
+    this.currentStep = 0;
+    if (this.autoPlayInterval) {
+      clearInterval(this.autoPlayInterval);
+      this.autoPlayInterval = null;
+    }
+    
+    const autoPlayBtn = document.getElementById('autoPlay');
+    if (autoPlayBtn) autoPlayBtn.textContent = '▶ Auto-play';
+    
+    // Reset step indicators
+    document.querySelectorAll('.step').forEach((step, index) => {
+      step.classList.toggle('active', index === 0);
+    });
+  }
+
+  showEmbeddingsError(message) {
+    const errorElement = document.getElementById('embeddingsError');
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
     }
   }
 }

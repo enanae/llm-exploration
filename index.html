@@ -53,98 +53,241 @@
               </div>
             </div>
           </div>
+          
+          <!-- Navigation -->
+          <nav class="navigation">
+            <button class="nav-btn active" data-page="tokenization">
+              <span class="nav-icon">🔤</span>
+              Tokenization
+            </button>
+            <button class="nav-btn" data-page="embeddings">
+              <span class="nav-icon">🧮</span>
+              Embeddings
+            </button>
+          </nav>
         </div>
       </header>
 
       <!-- Main Content -->
       <main class="container" style="display: none;">
-        <div class="grid gap-6">
-          <!-- Model Selector -->
-          <div class="card">
-            <h2 class="text-lg font-semibold mb-4">Select Language Model</h2>
-            <div class="grid grid-3" id="modelSelector">
-              <!-- Models will be populated by JavaScript -->
+        <!-- Tokenization Page -->
+        <div id="tokenization-page" class="page-content active">
+          <div class="grid gap-6">
+            <!-- Model Selector -->
+            <div class="card">
+              <h2 class="text-lg font-semibold mb-4">Select Language Model</h2>
+              <div class="grid grid-3" id="modelSelector">
+                <!-- Models will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Tokenization Explorer -->
+            <div class="card">
+              <h2 class="text-lg font-semibold mb-6">Tokenization Explorer</h2>
+              
+              <div class="grid gap-6">
+                <div class="input-section">
+                  <label for="input-text" class="input-label">
+                    Input Text
+                  </label>
+                  <textarea
+                    id="input-text"
+                    class="input textarea"
+                    placeholder="Enter text to tokenize..."
+                    rows="4"
+                  >The quick brown fox jumps over the lazy dog. This is a sample text to demonstrate tokenization.</textarea>
+                </div>
+
+                <div class="controls-card">
+                  <h3 class="controls-title">Tokenization Parameters</h3>
+                  
+                  <div class="grid grid-2 gap-4">
+                    <div class="control-group">
+                      <label class="control-label">
+                        <input type="checkbox" id="addSpecialTokens" class="control-checkbox" checked>
+                        Add Special Tokens
+                      </label>
+                      <p class="control-description">
+                        Include [CLS], [SEP], [PAD] tokens for BERT-style models
+                      </p>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">
+                        <input type="checkbox" id="padding" class="control-checkbox">
+                        Padding
+                      </label>
+                      <p class="control-description">
+                        Pad sequences to uniform length
+                      </p>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">
+                        <input type="checkbox" id="truncation" class="control-checkbox">
+                        Truncation
+                      </label>
+                      <p class="control-description">
+                        Truncate sequences that exceed max length
+                      </p>
+                    </div>
+
+                    <div class="control-group">
+                      <label class="control-label">
+                        Max Length
+                      </label>
+                      <input type="number" id="maxLength" class="control-input" value="512" min="1" max="2048">
+                      <p class="control-description">
+                        Maximum sequence length
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="controls-actions">
+                    <button class="btn" id="analyzeBtn">
+                      Analyze Tokenization
+                    </button>
+                    
+                    <div class="model-info-display">
+                      <span class="model-badge" id="currentModel">gpt2</span>
+                      <span class="model-type" id="modelType">GPT-style</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                <div id="tokenStats" style="display: none;"></div>
+                <div id="tokenVisualizer" style="display: none;"></div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Tokenization Explorer -->
-          <div class="card">
-            <h2 class="text-lg font-semibold mb-6">Tokenization Explorer</h2>
-            
-            <div class="grid gap-6">
-              <div class="input-section">
-                <label for="input-text" class="input-label">
-                  Input Text
-                </label>
-                <textarea
-                  id="input-text"
-                  class="input textarea"
-                  placeholder="Enter text to tokenize..."
-                  rows="4"
-                >The quick brown fox jumps over the lazy dog. This is a sample text to demonstrate tokenization.</textarea>
+        <!-- Embeddings Page -->
+        <div id="embeddings-page" class="page-content">
+          <div class="grid gap-6">
+            <!-- Embeddings Model Selector -->
+            <div class="card">
+              <h2 class="text-lg font-semibold mb-4">Select Embedding Model</h2>
+              <div class="grid grid-3" id="embeddingsModelSelector">
+                <!-- Models will be populated by JavaScript -->
               </div>
+            </div>
 
-              <div class="controls-card">
-                <h3 class="controls-title">Tokenization Parameters</h3>
-                
-                <div class="grid grid-2 gap-4">
-                  <div class="control-group">
-                    <label class="control-label">
-                      <input type="checkbox" id="addSpecialTokens" class="control-checkbox" checked>
-                      Add Special Tokens
-                    </label>
-                    <p class="control-description">
-                      Include [CLS], [SEP], [PAD] tokens for BERT-style models
-                    </p>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">
-                      <input type="checkbox" id="padding" class="control-checkbox">
-                      Padding
-                    </label>
-                    <p class="control-description">
-                      Pad sequences to uniform length
-                    </p>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">
-                      <input type="checkbox" id="truncation" class="control-checkbox">
-                      Truncation
-                    </label>
-                    <p class="control-description">
-                      Truncate sequences that exceed max length
-                    </p>
-                  </div>
-
-                  <div class="control-group">
-                    <label class="control-label">
-                      Max Length
-                    </label>
-                    <input type="number" id="maxLength" class="control-input" value="512" min="1" max="2048">
-                    <p class="control-description">
-                      Maximum sequence length
-                    </p>
-                  </div>
+            <!-- Embeddings Explorer -->
+            <div class="card">
+              <h2 class="text-lg font-semibold mb-6">Token Embeddings Explorer</h2>
+              
+              <div class="grid gap-6">
+                <div class="input-section">
+                  <label for="embeddings-input-text" class="input-label">
+                    Input Text
+                  </label>
+                  <textarea
+                    id="embeddings-input-text"
+                    class="input textarea"
+                    placeholder="Enter text to explore embeddings..."
+                    rows="3"
+                  >Hello world</textarea>
                 </div>
 
-                <div class="controls-actions">
-                  <button class="btn" id="analyzeBtn">
-                    Analyze Tokenization
+                <div class="embeddings-controls">
+                  <button class="btn" id="exploreEmbeddingsBtn">
+                    Explore Embeddings
                   </button>
-                  
-                  <div class="model-info-display">
-                    <span class="model-badge" id="currentModel">gpt2</span>
-                    <span class="model-type" id="modelType">GPT-style</span>
+                  <div class="embedding-options">
+                    <label class="control-label">
+                      <input type="checkbox" id="showPositionalEncoding" class="control-checkbox" checked>
+                      Show Positional Encoding
+                    </label>
+                    <label class="control-label">
+                      <input type="checkbox" id="showLayerNorm" class="control-checkbox">
+                      Show Layer Normalization
+                    </label>
+                  </div>
+                </div>
+
+                <div id="embeddingsError" class="error-message" style="display: none;"></div>
+
+                <!-- Embeddings Pipeline Visualization -->
+                <div id="embeddingsPipeline" style="display: none;">
+                  <div class="pipeline-header">
+                    <h3 class="pipeline-title">Embeddings Pipeline</h3>
+                    <div class="pipeline-steps">
+                      <div class="step active" data-step="tokens">
+                        <span class="step-number">1</span>
+                        <span class="step-label">Tokens</span>
+                      </div>
+                      <div class="step" data-step="dictionary">
+                        <span class="step-number">2</span>
+                        <span class="step-label">Dictionary</span>
+                      </div>
+                      <div class="step" data-step="positional">
+                        <span class="step-number">3</span>
+                        <span class="step-label">Positional</span>
+                      </div>
+                      <div class="step" data-step="final">
+                        <span class="step-number">4</span>
+                        <span class="step-label">Final</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pipeline-content">
+                    <!-- Step 1: Tokens -->
+                    <div id="step-tokens" class="pipeline-step active">
+                      <div class="step-content">
+                        <h4>Input Tokens</h4>
+                        <div id="tokenDisplay" class="token-display"></div>
+                      </div>
+                    </div>
+
+                    <!-- Step 2: Dictionary Embeddings -->
+                    <div id="step-dictionary" class="pipeline-step">
+                      <div class="step-content">
+                        <h4>Dictionary Embeddings</h4>
+                        <div class="embedding-visualization">
+                          <div class="embedding-matrix" id="dictionaryMatrix"></div>
+                          <div class="embedding-details" id="dictionaryDetails"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Step 3: Positional Encoding -->
+                    <div id="step-positional" class="pipeline-step">
+                      <div class="step-content">
+                        <h4>Positional Encoding</h4>
+                        <div class="positional-visualization">
+                          <div class="positional-heatmap" id="positionalHeatmap"></div>
+                          <div class="positional-formula">
+                            <p><strong>Formula:</strong> PE(pos, 2i) = sin(pos/10000^(2i/d_model))</p>
+                            <p><strong>Formula:</strong> PE(pos, 2i+1) = cos(pos/10000^(2i/d_model))</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Step 4: Final Embeddings -->
+                    <div id="step-final" class="pipeline-step">
+                      <div class="step-content">
+                        <h4>Final Embeddings</h4>
+                        <div class="final-embeddings">
+                          <div class="embedding-3d" id="finalEmbeddings3D"></div>
+                          <div class="embedding-stats" id="embeddingStats"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Pipeline Navigation -->
+                  <div class="pipeline-navigation">
+                    <button class="pipeline-nav-btn" id="prevStep" disabled>← Previous</button>
+                    <button class="pipeline-nav-btn" id="nextStep">Next →</button>
+                    <button class="pipeline-nav-btn" id="autoPlay">▶ Auto-play</button>
                   </div>
                 </div>
               </div>
-
-              <div id="errorMessage" class="error-message" style="display: none;"></div>
-
-              <div id="tokenStats" style="display: none;"></div>
-              <div id="tokenVisualizer" style="display: none;"></div>
             </div>
           </div>
         </div>
